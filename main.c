@@ -17,6 +17,7 @@
 #include "sensors.h"
 #include "pid.h"
 #include "controller.h"
+#include "DigiCom.h"
 #include "UniversalModuleDrivers/spi.h"
 #include "UniversalModuleDrivers/timer.h"
 #include "UniversalModuleDrivers/rgbled.h"
@@ -41,7 +42,11 @@ static uint16_t u16_ADC1_reg = 0;
 static uint16_t u16_ADC2_reg = 0;
 static uint16_t u16_ADC4_reg = 0;
 
+//counters for manual prescalers
+static uint8_t can_sender_counter = 0;
+static uint8_t speed_handler_counter = 0;
 
+//for CAN
 static uint8_t send_can = 0;
 
 //for SPI
@@ -72,6 +77,7 @@ typedef struct{
 	float f32_motor_current;
 	float f32_batt_current;
 	float f32_batt_volt;
+	float f32_energy ;
 	uint8_t u8_motor_temp;
 	uint8_t u8_car_speed;
 	uint8_t u8_throttle_cmd;
@@ -83,9 +89,10 @@ typedef struct{
 
 
 ModuleValues_t ComValues = {
-	.f32_motor_current = 0,
-	.f32_batt_current = 0,
-	.f32_batt_volt = 0,
+	.f32_motor_current = 0.0,
+	.f32_batt_current = 0.0,
+	.f32_batt_volt = 0.0,
+	.f32_energy = 0.0,
 	.u8_motor_temp = 0,
 	.u8_car_speed = 0,
 	.u8_throttle_cmd = 0, //in amps
@@ -134,9 +141,9 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
 	if(*send){
 		txFrame.data.u8[0] = vals->motor_status;
-		txFrame.data.u8[1] = vals->u8_throttle_cmd;
+		txFrame.data.u8[1] = 0;
 		txFrame.data.u16[1] = (uint16_t)(vals->f32_motor_current);
-		txFrame.data.u16[2] = OCR3B ;
+		txFrame.data.u16[2] = (uint16_t)(vals->f32_energy*1000) ;
 		txFrame.data.u16[3] = vals->u8_car_speed;
 		
 		can_send_message(&txFrame);
@@ -168,27 +175,25 @@ int main(void)
 	sei();
 	
 	rgbled_turn_on(LED_BLUE);
-	
+
     while (1){
 		
 		handle_motor_status_can_msg(&send_can, &ComValues);
 		handle_can(&ComValues, &rxFrame);
 	
 		//sends motor current and current cmd through USB
-		/*uart_putint((uint16_t)(ComValues.f32_motor_current*1000));
-		uart_puts(",");
-		uart_putint(ComValues.u8_throttle_cmd*1000);
-		uart_puts(",");
-		uart_putint((uint16_t)((float)OCR3A/ICR3*1000));
-		uart_puts("\r\n");*/
-		
+		printf("%i",ComValues.u8_car_speed);
+		printf(",");
+		printf("%i",u16_speed_count);
+		printf("\n");
+		/*
 		printf("%i",(uint16_t)(ComValues.f32_motor_current*1000));
 		printf(",");
 		printf("%u",ComValues.u8_throttle_cmd*1000);
 		printf(",");
 		printf("%u",(uint16_t)(ComValues.u8_duty_cycle*10.0));
 		printf("\n");
-		
+		*/
 		/////////////////////receiving throttle cmd through USB
 		if(uart_AvailableBytes()!=0){
 			volatile uint16_t u16_data_received=uart_getint(); //in Amps. if >10, braking, else accelerating. eg : 12 -> brake 2 amps; 2 -> accel 2 amps
@@ -214,8 +219,25 @@ int main(void)
 
 
 ISR(TIMER0_COMP_vect){ // every 5ms
-
-	//send_can = 1;
+	
+	if (can_sender_counter == 1) // every 10ms
+	{
+		//handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 10.0);
+		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;
+		send_can = 1;
+		can_sender_counter = 0;
+	} else {
+		can_sender_counter ++;
+	}
+	
+	if (speed_handler_counter == 100) // every 1s
+	{
+		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 1000);
+		speed_handler_counter = 0;
+		} else {
+		speed_handler_counter ++;
+	}
+	
 	if (ComValues.f32_batt_volt > 15.0) //if motor controller card powered
 	{
 		if (ComValues.motor_status == FW_BRAKE || ComValues.motor_status == BW_ACCEL)
@@ -246,8 +268,6 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 		drivers(0);//drivers shutdown
 		reset_I(); //reset integrator
 	}
-	
-	//handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 100);
 }
 
 
@@ -320,5 +340,6 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 
 ISR(INT5_vect)
 {
+	//printf("1");
 	u16_speed_count ++ ;
 }

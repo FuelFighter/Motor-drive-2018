@@ -12,6 +12,6 @@
 
 
 void speed_init();
-void handle_speed_sensor(uint8_t * u8_speed, uint16_t *u16_counter, uint8_t u8_period); // period in ms
+void handle_speed_sensor(uint8_t * u8_speed, uint16_t *u16_counter, uint16_t u16_period); // period in ms
 
 #endif /* SPEED_H_ */

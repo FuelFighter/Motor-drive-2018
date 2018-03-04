@@ -4,6 +4,8 @@
 
 controller.c
 
+DigiCom.c
+
 speed.c
 
 usart.c

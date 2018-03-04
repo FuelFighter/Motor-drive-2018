@@ -44,3 +44,8 @@ void handle_temp_sensor(uint8_t *u8_temp, uint16_t u16_ADC_reg)
 		*u8_temp = (uint8_t)(200*f_sens_volt-840);
 	}
 }
+
+void handle_joulemeter(float *f32_energy, float f32_bat_current, float f32_bat_voltage, uint8_t u8_time_period) //units : A, V, ms
+{
+	*f32_energy += f32_bat_voltage*f32_bat_current*(float)u8_time_period/1000 ;
+}
