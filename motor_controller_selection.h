@@ -24,19 +24,7 @@
 #endif
 
 #define MOTOR_CAN_ID					MOTOR_SELECT(MOTOR_1_STATUS_CAN_ID, MOTOR_2_STATUS_CAN_ID)
-#define CURRENT_CAN_ID					MOTOR_SELECT(100, 101)
-#define ENCODER_CHANNEL					MOTOR_SELECT(0, 1)
 
-#define NORMAL_MODE						0
-#define CC_MODE							1
-#define TORQUE_MODE						2
-#define TEST_MODE						0xFF
-#define BLANK							0xFE
-
-#define MAX_MAMP						MOTOR_SELECT(12000, 12000)
-#define MAX_RPM							MOTOR_SELECT(4000, 3000)
-#define PWM_MAX_DUTY_CYCLE_AT_0_RPM		120
-#define PWM_MAX_SCALING_RATIO (float)	(ICR3 - PWM_MAX_DUTY_CYCLE_AT_0_RPM)/MAX_RPM
 
 typedef enum {
 	IDLE = 0,
@@ -52,15 +40,26 @@ typedef enum
 	BACKWARD = 1
 } CarDirection_t;
 
+typedef enum
+{
+	NEUTRAL = 0,
+	GEAR1 = 1,
+	GEAR2 = 2
+} ClutchState_t ;
 
-
-#define OFF 0
-#define ON 1
-
-#define HORN 2
-#define JOYSTICKBUTTON 1
-
-#define LOWPASS_CONSTANT (0.1)
-#define BIT2MAMP (32.23)
+typedef struct{
+	float f32_motor_current;
+	float f32_batt_current;
+	float f32_batt_volt;
+	float f32_energy ;
+	uint8_t u8_motor_temp;
+	uint8_t u8_car_speed;
+	uint8_t u8_throttle_cmd;
+	uint8_t u8_duty_cycle ;
+	uint16_t u16_watchdog ;
+	MotorControllerState_t motor_status; // [||||||statebit2|statebit1]
+	CarDirection_t Direction;
+	ClutchState_t clutch;
+}ModuleValues_t;
 
 #endif /* MOTOR_CONTROLLER_SELECTION_H_ */

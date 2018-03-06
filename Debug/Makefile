@@ -40,6 +40,7 @@ SUBDIRS :=  \
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
 ../controller.c \
+../DigiCom.c \
 ../speed.c \
 ../usart.c \
 ../main.c \
@@ -63,6 +64,7 @@ ASM_SRCS +=
 
 OBJS +=  \
 controller.o \
+DigiCom.o \
 speed.o \
 usart.o \
 main.o \
@@ -79,6 +81,7 @@ usbdb.o
 
 OBJS_AS_ARGS +=  \
 controller.o \
+DigiCom.o \
 speed.o \
 usart.o \
 main.o \
@@ -95,6 +98,7 @@ usbdb.o
 
 C_DEPS +=  \
 controller.d \
+DigiCom.d \
 speed.d \
 usart.d \
 main.d \
@@ -111,6 +115,7 @@ usbdb.d
 
 C_DEPS_AS_ARGS +=  \
 controller.d \
+DigiCom.d \
 speed.d \
 usart.d \
 main.d \
@@ -139,6 +144,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

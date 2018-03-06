@@ -6,13 +6,13 @@
  * Corresponding Hardware : Motor Drive V2.0
  */ 
 
+#include <stdlib.h>
+#include <avr/io.h>
 #include "DigiCom.h"
 #include "sensors.h"
 #include "UniversalModuleDrivers/adc.h"
 #include "UniversalModuleDrivers/spi.h"
-
-
-/////////////////////////  SPI  /////////////////////////
+#include "AVR-UART-lib-master/usart.h"
 
 //ADC buffers
 static uint16_t u16_ADC0_reg = 0;
@@ -24,7 +24,15 @@ static uint16_t u16_ADC4_reg = 0;
 static uint8_t u8_txBuffer[2];
 static uint8_t u8_rxBuffer[3];
 
-void SPI_handler_0(float * f32_motcurrent); // motor current
+void DigiCom_init()
+{
+	txFrame.id = MOTOR_CAN_ID;
+	txFrame.length = 8;
+}
+
+/////////////////////////  SPI  /////////////////////////
+
+void SPI_handler_0(float * f32_motcurrent) // motor current
 {
 	Set_ADC_Channel_ext(0, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
@@ -34,7 +42,7 @@ void SPI_handler_0(float * f32_motcurrent); // motor current
 	handle_current_sensor(f32_motcurrent, u16_ADC0_reg);
 }
 
-void SPI_handler_1(float * f32_batcurrent); // battery current
+void SPI_handler_1(float * f32_batcurrent) // battery current
 {
 	Set_ADC_Channel_ext(1, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
@@ -44,17 +52,17 @@ void SPI_handler_1(float * f32_batcurrent); // battery current
 	handle_current_sensor(f32_batcurrent, u16_ADC1_reg);
 }
 
-void SPI_handler_2(float * f32_batvolt); //battery voltage
+void SPI_handler_2(float * f32_batvolt) //battery voltage
 {
 	Set_ADC_Channel_ext(2, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
 	u8_rxBuffer[1]&= ~(0b111<<5);
 	u16_ADC2_reg = (u8_rxBuffer[1] << 8 ) | u8_rxBuffer[2];
 	
-	*f32_battvolt = (float)u16_ADC2_reg/66.1 -0.37; // *5/4096 (12bit ADC with Vref = 5V) *0.1 (divider bridge 50V -> 5V) *coeff - offset(trimming)
+	*f32_batvolt = (float)u16_ADC2_reg/66.1 -0.37; // *5/4096 (12bit ADC with Vref = 5V) *0.1 (divider bridge 50V -> 5V) *coeff - offset(trimming)
 }
 
-void SPI_handler_4(uint8_t * u8_mottemp); //motor temperature
+void SPI_handler_4(uint8_t * u8_mottemp) //motor temperature
 {
 	Set_ADC_Channel_ext(4, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
@@ -67,6 +75,7 @@ void SPI_handler_4(uint8_t * u8_mottemp); //motor temperature
 
 ///////////////////////  CAN  /////////////////////////
 
+
 //recieving
 void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 	if (can_read_message_if_new(rx)){
@@ -75,16 +84,16 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 			
 			if (rx->data.u8[3] > 10)
 			{
-				ComValues.motor_status = FW_ACCEL ;
+				vals->motor_status = FW_ACCEL ;
 				vals->u8_throttle_cmd = rx->data.u8[3]/10.0 ;
 				} else {
-				ComValues.motor_status = IDLE ;
+				vals->motor_status = IDLE ;
 				vals->u8_throttle_cmd = 0;
 			}
 			
-			if (rx->data.u8[2] > 25 && ComValues.motor_status == IDLE)
+			if (rx->data.u8[2] > 25 && vals->motor_status == IDLE)
 			{
-				ComValues.motor_status = FW_BRAKE ;
+				vals->motor_status = FW_BRAKE ;
 				vals->u8_throttle_cmd = rx->data.u8[2]/10.0 ;
 			}
 			
@@ -114,5 +123,30 @@ void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
 		
 		can_send_message(&txFrame);
 		*send = 0;
+	}
+}
+
+///////////////////  UART  ////////////////////
+
+void receive_uart(ModuleValues_t * vals)
+{
+	if(uart_AvailableBytes()!=0){
+		volatile uint16_t u16_data_received=uart_getint(); //in Amps. if >10, braking, else accelerating. eg : 12 -> brake 2 amps; 2 -> accel 2 amps
+		uart_flush();
+		if (u16_data_received >10 && u16_data_received <= 20)
+		{
+			vals->u8_throttle_cmd = u16_data_received-10 ;
+			vals->motor_status = FW_BRAKE ;
+		}
+		if (u16_data_received>0 && u16_data_received <= 10)
+		{
+			vals->u8_throttle_cmd = u16_data_received ;
+			vals->motor_status = FW_ACCEL;
+		}
+		if (u16_data_received == 0)
+		{
+			vals->u8_throttle_cmd = u16_data_received ;
+			vals->motor_status = IDLE;
+		}
 	}
 }
