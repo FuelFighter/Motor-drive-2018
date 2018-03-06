@@ -28,10 +28,9 @@
 
 typedef enum {
 	IDLE = 0,
-	FW_ACCEL = 1,
-	FW_BRAKE = 2,
-	BW_ACCEL = 3,
-	BW_BRAKE = 4
+	ACCEL = 1,
+	BRAKE = 2,
+
 } MotorControllerState_t;
 
 typedef enum 
@@ -60,6 +59,7 @@ typedef struct{
 	MotorControllerState_t motor_status; // [||||||statebit2|statebit1]
 	CarDirection_t Direction;
 	ClutchState_t clutch;
+	ClutchState_t clutch_required;
 }ModuleValues_t;
 
 #endif /* MOTOR_CONTROLLER_SELECTION_H_ */

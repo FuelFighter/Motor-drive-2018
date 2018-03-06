@@ -68,7 +68,8 @@ ModuleValues_t ComValues = {
 	.u8_duty_cycle = 50,
 	.u16_watchdog = WATCHDOG_RELOAD_VALUE,
 	.motor_status = IDLE,
-	.clutch = NEUTRAL
+	.clutch = NEUTRAL,
+	.clutch_required = NEUTRAL
 };
 
 int main(void)	

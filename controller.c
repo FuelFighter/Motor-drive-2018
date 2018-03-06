@@ -88,6 +88,7 @@ void drivers_init()
 {
 	DDRB |= (1 << PB4) ;
 }
+
 void drivers(uint8_t b_state)
 {
 	if (b_state)
@@ -102,14 +103,14 @@ void manage_motor(ModuleValues_t * vals)
 {
 		if (vals->f32_batt_volt > 15.0) //if motor controller card powered
 	{
-		if (vals->motor_status == FW_BRAKE || vals->motor_status == BW_ACCEL)
+		if (vals->motor_status == BRAKE)
 		{
 			vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
 			drivers(1); //drivers turn on
 			controller(-vals->u8_throttle_cmd, vals->f32_motor_current,&vals->u8_duty_cycle);
 		}
 	
-		if (/*vals->motor_status == BW_BRAKE || */vals->motor_status == FW_ACCEL)
+		if (vals->motor_status == ACCEL)
 		{
 			vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
 			drivers(1); //drivers turn on

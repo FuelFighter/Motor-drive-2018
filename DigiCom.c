@@ -84,7 +84,7 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 			
 			if (rx->data.u8[3] > 10)
 			{
-				vals->motor_status = FW_ACCEL ;
+				vals->motor_status = ACCEL ;
 				vals->u8_throttle_cmd = rx->data.u8[3]/10.0 ;
 				} else {
 				vals->motor_status = IDLE ;
@@ -93,7 +93,7 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 			
 			if (rx->data.u8[2] > 25 && vals->motor_status == IDLE)
 			{
-				vals->motor_status = FW_BRAKE ;
+				vals->motor_status = BRAKE ;
 				vals->u8_throttle_cmd = rx->data.u8[2]/10.0 ;
 			}
 			
@@ -101,12 +101,8 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 			break;
 			
 			case BRAKE_CAN_ID:
-			if (vals->Direction == FORWARD)
-			{
-				vals->motor_status = FW_BRAKE;
-				} else {
-				vals->motor_status = BW_BRAKE;
-			}
+				vals->motor_status = BRAKE;
+				vals->u8_throttle_cmd = rx->data.u8[2]/10.0 ;
 			break;
 		}
 	}
@@ -136,12 +132,12 @@ void receive_uart(ModuleValues_t * vals)
 		if (u16_data_received >10 && u16_data_received <= 20)
 		{
 			vals->u8_throttle_cmd = u16_data_received-10 ;
-			vals->motor_status = FW_BRAKE ;
+			vals->motor_status = BRAKE ;
 		}
 		if (u16_data_received>0 && u16_data_received <= 10)
 		{
 			vals->u8_throttle_cmd = u16_data_received ;
-			vals->motor_status = FW_ACCEL;
+			vals->motor_status = ACCEL;
 		}
 		if (u16_data_received == 0)
 		{
