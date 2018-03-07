@@ -17,8 +17,7 @@
 CanMessage_t rxFrame;
 CanMessage_t txFrame;
 
-///////////////// PROTOTYPES //////////////
-void DigiCom_init();
+///////////////// PROTOTYPES //////////////s
 
 //SPI
 void SPI_handler_0(float * f32_motcurrent); // motor current

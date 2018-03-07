@@ -130,7 +130,14 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	
 	if (speed_handler_counter == 100) // every 1s
 	{
-		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 1000);
+		//handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 1000);
+		//for test
+		ComValues.u8_car_speed ++ ;
+		if (ComValues.u8_car_speed == 99)
+		{
+			ComValues.u8_car_speed = 0 ;
+		}
+		
 		speed_handler_counter = 0;
 		} else {
 		speed_handler_counter ++;

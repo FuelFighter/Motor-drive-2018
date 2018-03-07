@@ -17,7 +17,5 @@ void uart_init();
 void uart_tx_char(char c);
 void uart_tx_str(char* str);
 
-void USART0_Init (unsigned int baud);
-void USART0_Transmit (unsigned int data);
 
 #endif /* UART_H_ */

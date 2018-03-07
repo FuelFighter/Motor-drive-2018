@@ -24,12 +24,6 @@ static uint16_t u16_ADC4_reg = 0;
 static uint8_t u8_txBuffer[2];
 static uint8_t u8_rxBuffer[3];
 
-void DigiCom_init()
-{
-	txFrame.id = MOTOR_CAN_ID;
-	txFrame.length = 8;
-}
-
 /////////////////////////  SPI  /////////////////////////
 
 void SPI_handler_0(float * f32_motcurrent) // motor current
@@ -110,12 +104,16 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 
 //sending
 void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
+	
+	txFrame.id = MOTOR_CAN_ID;
+	txFrame.length = 8;
+	
 	if(*send){
 		txFrame.data.u8[0] = vals->motor_status;
 		txFrame.data.u8[1] = 0;
 		txFrame.data.u16[1] = (uint16_t)(vals->f32_motor_current);
 		txFrame.data.u16[2] = (uint16_t)(vals->f32_energy*1000) ;
-		txFrame.data.u16[3] = vals->u8_car_speed;
+		txFrame.data.u16[3] = (uint16_t)(vals->u8_car_speed) ;
 		
 		can_send_message(&txFrame);
 		*send = 0;
