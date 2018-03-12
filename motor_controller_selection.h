@@ -27,10 +27,11 @@
 
 
 typedef enum {
-	IDLE = 0,
-	ACCEL = 1,
-	BRAKE = 2,
-
+	OFF = 0, // power or CAN disconnected
+	ACCEL = 1, //receiving ACCEL cmd
+	BRAKE = 2, //Receiving BRAKE cmd
+	IDLE = 3, //receiving 0 current cmd (car rolling, current law is running with 0A cmd
+	ERR = 4, //error mode
 } MotorControllerState_t;
 
 typedef enum 
@@ -60,6 +61,7 @@ typedef struct{
 	CarDirection_t Direction;
 	ClutchState_t clutch;
 	ClutchState_t clutch_required;
+	uint8_t b_driver_status;
 }ModuleValues_t;
 
 #endif /* MOTOR_CONTROLLER_SELECTION_H_ */

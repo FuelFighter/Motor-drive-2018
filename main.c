@@ -30,7 +30,7 @@
 
 //counters for manual prescalers
 static uint8_t can_sender_counter = 0;
-static uint8_t speed_handler_counter = 0;
+static uint16_t speed_handler_counter = 0;
 
 //for CAN
 static uint8_t send_can = 0;
@@ -40,6 +40,7 @@ static uint8_t u8_SPI_count = 0;
 
 //for speed
 static uint16_t u16_speed_count = 0;
+
 
 void timer1_init_ts(){
 	TCCR1B |= (1<<CS10)|(1<<CS11); // timer 1 prescaler set CLK/64
@@ -67,14 +68,18 @@ ModuleValues_t ComValues = {
 	.u8_throttle_cmd = 0, //in amps
 	.u8_duty_cycle = 50,
 	.u16_watchdog = WATCHDOG_RELOAD_VALUE,
-	.motor_status = IDLE,
+	.motor_status = OFF,
 	.clutch = NEUTRAL,
-	.clutch_required = NEUTRAL
+	.clutch_required = NEUTRAL,
+	.b_driver_status = 0 
 };
 
 int main(void)	
 {
 	cli();
+	rgbled_init();
+	rgbled_turn_on(LED_BLUE);
+
 	pwm_init();
 	can_init(0,0);
 	timer1_init_ts();
@@ -91,53 +96,38 @@ int main(void)
 	drivers_init();
 	sei();
 	
-	rgbled_turn_on(LED_BLUE);
-
+	_delay_ms(4000); // wait for BMS power up
+	
     while (1){
 		
-		handle_motor_status_can_msg(&send_can, &ComValues);
-		handle_can(&ComValues, &rxFrame);
-	
-		//sends motor current and current cmd through USB
-		printf("%i",ComValues.u8_car_speed);
-		printf(",");
-		printf("%i",u16_speed_count);
-		printf("\n");
-		/*
-		printf("%i",(uint16_t)(ComValues.f32_motor_current*1000));
-		printf(",");
-		printf("%u",ComValues.u8_throttle_cmd*1000);
-		printf(",");
-		printf("%u",(uint16_t)(ComValues.u8_duty_cycle*10.0));
-		printf("\n");
-		*/
+		handle_motor_status_can_msg(&send_can, &ComValues); //send CAN
+		handle_can(&ComValues, &rxFrame); //receive CAN
+		
+		send_uart(ComValues);
 		receive_uart(&ComValues);
+		
+		err_check(&ComValues); //verifying current, temperature and voltage
 	}
 }
 
 
-ISR(TIMER0_COMP_vect){ // every 5ms
+ISR(TIMER0_COMP_vect){ // every 5ms? TODO check loop times!!!
 	
 	if (can_sender_counter == 1) // every 10ms
 	{
 		//handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 10.0);
 		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;
-		send_can = 1;
+		
 		can_sender_counter = 0;
 	} else {
 		can_sender_counter ++;
 	}
 	
-	if (speed_handler_counter == 100) // every 1s
+	if (speed_handler_counter == 1000) // every 1s 
 	{
-		//handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 1000);
-		//for test
-		ComValues.u8_car_speed ++ ;
-		if (ComValues.u8_car_speed == 99)
-		{
-			ComValues.u8_car_speed = 0 ;
-		}
-		
+		manage_LEDs(ComValues); //UM LED according to motor state
+		send_can = 1;
+		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 1000);	//write real loop time when measured	
 		speed_handler_counter = 0;
 		} else {
 		speed_handler_counter ++;
@@ -193,7 +183,7 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 }
 
 
-ISR(INT5_vect)
+ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in frot of the reed switch)
 {
 	u16_speed_count ++ ;
 }

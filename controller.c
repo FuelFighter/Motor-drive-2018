@@ -59,7 +59,7 @@ void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty
 	
 	f32_CurrentDelta = (f32_current_cmd-f32_prev_current)	;
 	
-	if (!b_saturation) // prevents over integration of an error that cannot be dealt with (because the duty cycle reaches a limit) intgral windup protection
+	if (!b_saturation) // prevents over integration of an error that cannot be dealt with (because the duty cycle reaches a limit) integral windup protection
 	{
 		f32_Integrator+=f32_CurrentDelta*TimeStep ;
 	}
@@ -81,15 +81,15 @@ void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty
 	OCR3A = (int)((f32_DutyCycleCmd/100.0)*ICR3) ; //PWM_PE3 (non inverted)
 	OCR3B = OCR3A ; //PWM_PE4 (inverted)
 	
-	*u8_duty = (uint16_t)f32_DutyCycleCmd ;
+	*u8_duty = (uint16_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
 }
 
-void drivers_init()
+void drivers_init() // defining pin PB4 as logical output
 {
 	DDRB |= (1 << PB4) ;
 }
 
-void drivers(uint8_t b_state)
+void drivers(uint8_t b_state) //when pin PB4 is high : drivers are shut down, when pin is low, drivers are ON (inverted logic) IR2104SPbF drivers
 {
 	if (b_state)
 	{
@@ -101,34 +101,37 @@ void drivers(uint8_t b_state)
 
 void manage_motor(ModuleValues_t * vals)
 {
-		if (vals->f32_batt_volt > 15.0) //if motor controller card powered
+	switch(vals->motor_status)
 	{
-		if (vals->motor_status == BRAKE)
-		{
-			vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
+		case BRAKE :
 			drivers(1); //drivers turn on
-			controller(-vals->u8_throttle_cmd, vals->f32_motor_current,&vals->u8_duty_cycle);
-		}
-	
-		if (vals->motor_status == ACCEL)
-		{
-			vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
+			vals->b_driver_status = 1;
+			controller(-vals->u8_throttle_cmd, vals->f32_motor_current,&vals->u8_duty_cycle); //negative throttle cmd
+		break;
+		
+		case ACCEL :
 			drivers(1); //drivers turn on
+			vals->b_driver_status = 1;
 			controller(vals->u8_throttle_cmd, vals->f32_motor_current, &vals->u8_duty_cycle);
-		}
-		if (vals->motor_status == IDLE)
-		{
-			/*if (vals->u16_watchdog == 0)
-			{
-				drivers(0);//drivers shutdown
-				reset_I(); //reset integrator
-			}else{
-				vals->u16_watchdog -- ;
-			}*/
-			controller(0.0, vals->f32_motor_current,&vals->u8_duty_cycle);		
-		}
-	}else{
-		drivers(0);//drivers shutdown
-		reset_I(); //reset integrator
+		break;
+		
+		case IDLE :
+			drivers(1); //drivers turn on
+			vals->b_driver_status = 1;
+			controller(0, vals->f32_motor_current, &vals->u8_duty_cycle); //current law running with 0 torque 
+			//(integrator naturally following the speed of the car as it decreases, to prevent a big step at the next acceleration.)
+		break;
+		
+		case OFF : // drivers disabled
+			drivers(0);//drivers shutdown
+			vals->b_driver_status = 0;
+			reset_I(); //reset integrator
+		break;
+		
+		case ERR :
+			drivers(0);//drivers shutdown
+			vals->b_driver_status = 0;
+			reset_I(); //reset integrator
+		break;
 	}
 }

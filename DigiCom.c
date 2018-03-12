@@ -12,6 +12,7 @@
 #include "sensors.h"
 #include "UniversalModuleDrivers/adc.h"
 #include "UniversalModuleDrivers/spi.h"
+#include "UniversalModuleDrivers/rgbled.h"
 #include "AVR-UART-lib-master/usart.h"
 
 //ADC buffers
@@ -70,33 +71,26 @@ void SPI_handler_4(uint8_t * u8_mottemp) //motor temperature
 ///////////////////////  CAN  /////////////////////////
 
 
-//recieving
+//receiving
 void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
-	if (can_read_message_if_new(rx)){
+	if (can_read_message_if_new(rx) && vals->motor_status != ERR){
 		switch (rx->id){
-			case FORWARD_CAN_ID:
-			
-			if (rx->data.u8[3] > 10)
-			{
-				vals->motor_status = ACCEL ;
-				vals->u8_throttle_cmd = rx->data.u8[3]/10.0 ;
+			case STEERING_WHEEL_CAN_ID	: //receiving can messages from the steering wheel
+				
+				if (rx->data.u8[3] > 10)
+				{
+					vals->motor_status = ACCEL ;
+					vals->u8_throttle_cmd = rx->data.u8[3]/10.0 ;
 				} else {
-				vals->motor_status = IDLE ;
-				vals->u8_throttle_cmd = 0;
-			}
-			
-			if (rx->data.u8[2] > 25 && vals->motor_status == IDLE)
-			{
-				vals->motor_status = BRAKE ;
-				vals->u8_throttle_cmd = rx->data.u8[2]/10.0 ;
-			}
-			
-			
-			break;
-			
-			case BRAKE_CAN_ID:
-				vals->motor_status = BRAKE;
-				vals->u8_throttle_cmd = rx->data.u8[2]/10.0 ;
+					vals->motor_status = IDLE ;
+					vals->u8_throttle_cmd = 0;
+				}
+				
+				if (rx->data.u8[2] > 25 && vals->motor_status == IDLE)
+				{
+					vals->motor_status = BRAKE ;
+					vals->u8_throttle_cmd = rx->data.u8[2]/10.0 ;
+				}
 			break;
 		}
 	}
@@ -122,9 +116,10 @@ void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
 
 ///////////////////  UART  ////////////////////
 
+//receiving 
 void receive_uart(ModuleValues_t * vals)
 {
-	if(uart_AvailableBytes()!=0){
+	if(uart_AvailableBytes()!=0 && vals->motor_status != ERR){
 		volatile uint16_t u16_data_received=uart_getint(); //in Amps. if >10, braking, else accelerating. eg : 12 -> brake 2 amps; 2 -> accel 2 amps
 		uart_flush();
 		if (u16_data_received >10 && u16_data_received <= 20)
@@ -142,5 +137,48 @@ void receive_uart(ModuleValues_t * vals)
 			vals->u8_throttle_cmd = u16_data_received ;
 			vals->motor_status = IDLE;
 		}
+	}
+}
+
+//sending
+//sends motor current and current cmd through USB
+void send_uart(ModuleValues_t vals)
+{
+	printf("%i",(int16_t)(vals.f32_motor_current*1000));
+	printf(",");
+	//printf("%u",vals.u8_throttle_cmd*1000);
+	//printf(",");
+	//printf("%u",(uint16_t)(vals.u8_duty_cycle*10.0));
+	//printf(",");
+	printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
+	printf("\n");
+}
+
+///////////////// LED /////////////////////
+void manage_LEDs(ModuleValues_t vals)
+{
+	rgbled_turn_off(LED_ALL);
+	
+	switch (vals.motor_status)
+	{
+		case OFF :
+			rgbled_turn_on(LED_BLUE);
+		break ;
+		
+		case ACCEL :
+			rgbled_toggle(LED_GREEN);
+		break;
+		
+		case BRAKE :
+			rgbled_toggle(LED_GREEN);
+		break;
+		
+		case IDLE :
+			rgbled_turn_on(LED_GREEN);
+		break;
+		
+		case ERR :
+			rgbled_turn_on(LED_RED);
+		break;
 	}
 }

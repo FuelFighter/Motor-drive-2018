@@ -31,4 +31,10 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx); //receiving
 
 //UART
 void receive_uart(ModuleValues_t * vals);
+void send_uart(ModuleValues_t vals);
+
+//LEDs
+void manage_LEDs(ModuleValues_t vals);
+
+
 #endif /* DIGICOM_H_ */
