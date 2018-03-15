@@ -10,6 +10,7 @@
 #include <avr/io.h>
 #include "DigiCom.h"
 #include "sensors.h"
+#include "controller.h"
 #include "UniversalModuleDrivers/adc.h"
 #include "UniversalModuleDrivers/spi.h"
 #include "UniversalModuleDrivers/rgbled.h"
@@ -77,6 +78,8 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 		switch (rx->id){
 			case STEERING_WHEEL_CAN_ID	: //receiving can messages from the steering wheel
 				
+				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ; // resetting to max value each time a message is received.
+
 				if (rx->data.u8[3] > 10)
 				{
 					vals->motor_status = ACCEL ;
@@ -144,40 +147,60 @@ void receive_uart(ModuleValues_t * vals)
 //sends motor current and current cmd through USB
 void send_uart(ModuleValues_t vals)
 {
-	printf("%i",(int16_t)(vals.f32_motor_current*1000));
-	printf(",");
-	//printf("%u",vals.u8_throttle_cmd*1000);
-	//printf(",");
-	//printf("%u",(uint16_t)(vals.u8_duty_cycle*10.0));
-	//printf(",");
-	printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
+	printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.u8_throttle_cmd);
+// 	printf(",");
+// 	printf("%i",(int16_t)(vals.f32_batt_current*1000));
+// 	printf(",");
+// 	printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
+// 	printf(",");
+// 	printf("%u",vals.u8_car_speed);
+// 	printf(",");
+// 	printf("%u",vals.u8_duty_cycle);
+// 	printf(",");
+// 	printf("%u",vals.u8_motor_temp);
+// 	printf(",");
+// 	if (vals.motor_status == BRAKE)
+// 	{
+// 		printf("%i",-vals.u8_throttle_cmd*1000);
+// 	}else
+// 	{
+// 		printf("%i",vals.u8_throttle_cmd*1000);
+// 	}
 	printf("\n");
 }
 
 ///////////////// LED /////////////////////
 void manage_LEDs(ModuleValues_t vals)
-{
-	rgbled_turn_off(LED_ALL);
-	
+{	
 	switch (vals.motor_status)
 	{
 		case OFF :
+			rgbled_turn_off(LED_GREEN);
+			rgbled_turn_off(LED_RED);
 			rgbled_turn_on(LED_BLUE);
 		break ;
 		
 		case ACCEL :
+			rgbled_turn_off(LED_RED);
+			rgbled_turn_off(LED_BLUE);
 			rgbled_toggle(LED_GREEN);
 		break;
 		
 		case BRAKE :
+			rgbled_turn_off(LED_RED);
+			rgbled_turn_off(LED_BLUE);
 			rgbled_toggle(LED_GREEN);
 		break;
 		
 		case IDLE :
+			rgbled_turn_off(LED_RED);
+			rgbled_turn_off(LED_BLUE);
 			rgbled_turn_on(LED_GREEN);
 		break;
 		
 		case ERR :
+			rgbled_turn_off(LED_GREEN);
+			rgbled_turn_off(LED_BLUE);
 			rgbled_turn_on(LED_RED);
 		break;
 	}

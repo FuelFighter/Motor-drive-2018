@@ -16,11 +16,13 @@ DigiCom.d DigiCom.o: .././DigiCom.c \
  .././DigiCom.h .././motor_controller_selection.h \
  .././UniversalModuleDrivers/can.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h \
- .././sensors.h .././UniversalModuleDrivers/adc.h \
- .././UniversalModuleDrivers/spi.h .././UniversalModuleDrivers/rgbled.h \
- .././AVR-UART-lib-master/usart.h .././AVR-UART-lib-master/usart_config.h \
+ .././sensors.h .././controller.h .././pid.h \
+ .././UniversalModuleDrivers/usbdb.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h \
- c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h \
+ .././UniversalModuleDrivers/adc.h .././UniversalModuleDrivers/spi.h \
+ .././UniversalModuleDrivers/rgbled.h .././AVR-UART-lib-master/usart.h \
+ .././AVR-UART-lib-master/usart_config.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdlib.h:
 
@@ -60,6 +62,16 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\
 
 .././sensors.h:
 
+.././controller.h:
+
+.././pid.h:
+
+.././UniversalModuleDrivers/usbdb.h:
+
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h:
+
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h:
+
 .././UniversalModuleDrivers/adc.h:
 
 .././UniversalModuleDrivers/spi.h:
@@ -69,7 +81,3 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\
 .././AVR-UART-lib-master/usart.h:
 
 .././AVR-UART-lib-master/usart_config.h:
-
-c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h:
-
-c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h:

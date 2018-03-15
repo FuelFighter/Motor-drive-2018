@@ -29,11 +29,14 @@
 #define USE_USART0
 
 //counters for manual prescalers
-static uint8_t can_sender_counter = 0;
-static uint16_t speed_handler_counter = 0;
+static uint8_t systic_counter_fast = 0;
+static uint16_t systic_counter_slow = 0;
 
 //for CAN
 static uint8_t send_can = 0;
+
+//for UART
+uint8_t b_send_uart = 0;
 
 //for SPI
 static uint8_t u8_SPI_count = 0; 
@@ -78,7 +81,7 @@ int main(void)
 {
 	cli();
 	rgbled_init();
-	rgbled_turn_on(LED_BLUE);
+	//rgbled_turn_on(LED_BLUE);
 
 	pwm_init();
 	can_init(0,0);
@@ -96,14 +99,18 @@ int main(void)
 	drivers_init();
 	sei();
 	
-	_delay_ms(4000); // wait for BMS power up
+	//_delay_ms(4000); // wait for BMS power up
 	
     while (1){
 		
 		handle_motor_status_can_msg(&send_can, &ComValues); //send CAN
 		handle_can(&ComValues, &rxFrame); //receive CAN
 		
-		send_uart(ComValues);
+		if (b_send_uart)
+		{
+			send_uart(ComValues);
+			b_send_uart = 0;
+		}
 		receive_uart(&ComValues);
 		
 		err_check(&ComValues); //verifying current, temperature and voltage
@@ -111,26 +118,34 @@ int main(void)
 }
 
 
-ISR(TIMER0_COMP_vect){ // every 5ms? TODO check loop times!!!
+ISR(TIMER0_COMP_vect){ // every 5ms
 	
-	if (can_sender_counter == 1) // every 10ms
+	if (systic_counter_fast == 1) // every 10ms
 	{
-		//handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 10.0);
-		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;
-		
-		can_sender_counter = 0;
+		if (ComValues.u16_watchdog == 0)
+		{
+			if (ComValues.motor_status != ERR)
+			{
+				ComValues.motor_status = OFF ;
+			}
+			}else{
+			ComValues.u16_watchdog -- ;
+		}
+		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;		
+		systic_counter_fast = 0;
 	} else {
-		can_sender_counter ++;
+		systic_counter_fast ++;
 	}
 	
-	if (speed_handler_counter == 1000) // every 1s 
+	if (systic_counter_slow == 100) // every 0.5s 
 	{
+		b_send_uart = 1;
+		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 500.0);
 		manage_LEDs(ComValues); //UM LED according to motor state
 		send_can = 1;
-		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 1000);	//write real loop time when measured	
-		speed_handler_counter = 0;
+		systic_counter_slow = 0;
 		} else {
-		speed_handler_counter ++;
+		systic_counter_slow ++;
 	}
 	
 	manage_motor(&ComValues);
@@ -147,7 +162,7 @@ ISR(TIMER0_COMP_vect){ // every 5ms? TODO check loop times!!!
 
 
 ISR(TIMER1_COMPA_vect){// every 1ms
-
+	
 	if (u8_SPI_count == 4)
 	{
 		//motor temp
