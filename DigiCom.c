@@ -162,7 +162,7 @@ void send_uart(ModuleValues_t vals)
 // 	printf(",");
 // 	printf("%u",vals.u8_car_speed);
 // 	printf(",");
-	printf("%u",(uint16_t)(vals.f32_batt_volt)*100);
+	printf("%u",(uint16_t)(vals.u8_motor_temp)*100);
  	printf(",");
  	printf("%u",vals.u8_duty_cycle*10);
  	printf(",");

@@ -36,7 +36,7 @@ void pwm_init(void){
 		TCCR3B &= ~((1<<CS32)|(1<<CS31));
 		
 		//Set top value for timer 3
-		ICR3 = 0x199; //20kHz
+		ICR3 = 0x100; //20kHz
 		
 		OCR3A = (int)((0.5)*ICR3) ; //PWM_PE3 (non inverted)
 		OCR3B = OCR3A ; //PWM_PE4 (inverted)
@@ -51,21 +51,21 @@ void pwm_init(void){
 		
 		// Set OC3A on Compare Match when up-counting. clear OC3A on Compare Match when downcounting.
 		TCCR3A |= (1<<COM3A1);
-		TCCR3A |= (1<<COM3A0);
+		TCCR3A &= ~(1<<COM3A0);
 		
 		// Set OC3B on Compare Match when up-counting. Clear OC3B on Compare Match when downcounting.
 		TCCR3A |= (1<<COM3B1);
-		TCCR3A |= (1<<COM3B0);
+		TCCR3A &= ~(1<<COM3B0);
 		
 		//Set prescale clk/1 for timer 3
 		TCCR3B |= (1<<CS30);
 		TCCR3B &= ~((1<<CS32)|(1<<CS31));
 		
 		//Set top value for timer 3
-		ICR3 = 0x199; //20kHz
+		ICR3 = 0x100; 
 		
 		//initialising compare registers at Duty cycle 50%
 		OCR3A = (int)((0.5)*ICR3) ; //PWM_PE3
-		OCR3B = OCR3A ; //PWM_PE4
+		OCR3B = ICR3-OCR3A ; //PWM_PE4
 	}
 }

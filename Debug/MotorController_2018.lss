@@ -23,11 +23,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   9 .debug_frame  00000e78  00000000  00000000  0000c060  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000015cd  00000000  00000000  0000ced8  2**0
+ 10 .debug_str    00001616  00000000  00000000  0000ced8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00003cf5  00000000  00000000  0000e4a5  2**0
+ 11 .debug_loc    00003cf5  00000000  00000000  0000e4ee  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 000003d8  00000000  00000000  0001219a  2**0
+ 12 .debug_ranges 000003d8  00000000  00000000  000121e3  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -2464,7 +2464,7 @@ ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magn
 
 00000f90 <handle_current_sensor>:
 #define TRANSDUCER_SENSIBILITY 0.0416
-#define TRANSDUCER_OFFSET 2.254
+#define TRANSDUCER_OFFSET 2.24
 #define LOWPASS_CONSTANT 0.1
 
 void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg)
@@ -2500,9 +2500,9 @@ void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg)
      fc6:	40 e8       	ldi	r20, 0x80	; 128
      fc8:	59 e3       	ldi	r21, 0x39	; 57
      fca:	f6 d5       	rcall	.+3052   	; 0x1bb8 <__mulsf3>
-     fcc:	29 e8       	ldi	r18, 0x89	; 137
-     fce:	31 e4       	ldi	r19, 0x41	; 65
-     fd0:	40 e1       	ldi	r20, 0x10	; 16
+     fcc:	29 e2       	ldi	r18, 0x29	; 41
+     fce:	3c e5       	ldi	r19, 0x5C	; 92
+     fd0:	4f e0       	ldi	r20, 0x0F	; 15
      fd2:	50 e4       	ldi	r21, 0x40	; 64
      fd4:	39 d4       	rcall	.+2162   	; 0x1848 <__subsf3>
      fd6:	23 ec       	ldi	r18, 0xC3	; 195

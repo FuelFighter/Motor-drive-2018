@@ -1466,7 +1466,7 @@ END GROUP
  .debug_frame   0x00000d80       0x50 UniversalModuleDrivers/spi.o
  .debug_frame   0x00000dd0       0xa8 UniversalModuleDrivers/timer.o
 
-.debug_str      0x00000000     0x15cd
+.debug_str      0x00000000     0x1616
  *(.debug_str)
  .debug_str     0x00000000      0x39f C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/at90can128/avr51/crtat90can128.o
  .debug_str     0x0000039f      0x380 controller.o
@@ -1481,17 +1481,17 @@ END GROUP
                                 0x73f (size before relaxing)
  .debug_str     0x00000f78      0x130 main.o
                                 0x5bb (size before relaxing)
- .debug_str     0x000010a8       0x78 sensors.o
-                                0x398 (size before relaxing)
- .debug_str     0x00001120      0x214 UniversalModuleDrivers/adc.o
+ .debug_str     0x000010a8       0xc1 sensors.o
+                                0x3a6 (size before relaxing)
+ .debug_str     0x00001169      0x214 UniversalModuleDrivers/adc.o
                                 0x35b (size before relaxing)
- .debug_str     0x00001334       0xe1 UniversalModuleDrivers/can.o
+ .debug_str     0x0000137d       0xe1 UniversalModuleDrivers/can.o
                                 0x307 (size before relaxing)
- .debug_str     0x00001415       0x37 UniversalModuleDrivers/rgbled.o
+ .debug_str     0x0000145e       0x37 UniversalModuleDrivers/rgbled.o
                                 0x20a (size before relaxing)
- .debug_str     0x0000144c       0xb7 UniversalModuleDrivers/spi.o
+ .debug_str     0x00001495       0xb7 UniversalModuleDrivers/spi.o
                                 0x281 (size before relaxing)
- .debug_str     0x00001503       0xca UniversalModuleDrivers/timer.o
+ .debug_str     0x0000154c       0xca UniversalModuleDrivers/timer.o
                                 0x262 (size before relaxing)
 
 .debug_loc      0x00000000     0x3cf5
