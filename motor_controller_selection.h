@@ -47,6 +47,12 @@ typedef enum
 	GEAR2 = 2
 } ClutchState_t ;
 
+typedef enum
+{
+	CURRENT,
+	PWM
+} ControlType_t ;
+
 typedef struct{
 	float f32_motor_current;
 	float f32_batt_current;
@@ -62,6 +68,8 @@ typedef struct{
 	ClutchState_t clutch;
 	ClutchState_t clutch_required;
 	uint8_t b_driver_status;
+	ControlType_t ctrl_type;
+
 }ModuleValues_t;
 
 #endif /* MOTOR_CONTROLLER_SELECTION_H_ */

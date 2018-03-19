@@ -168,6 +168,14 @@
     <Compile Include="speed.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="UniversalModuleDrivers\pwm.c">
+      <SubType>compile</SubType>
+      <Link>pwm.c</Link>
+    </Compile>
+    <Compile Include="UniversalModuleDrivers\pwm.h">
+      <SubType>compile</SubType>
+      <Link>pwm.h</Link>
+    </Compile>
     <Compile Include="usart.c">
       <SubType>compile</SubType>
     </Compile>
@@ -215,14 +223,6 @@
     </Compile>
     <Compile Include="UniversalModuleDrivers\can.h">
       <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="UniversalModuleDrivers\pwm.c">
-      <SubType>compile</SubType>
-      <Link>pwm.c</Link>
-    </Compile>
-    <Compile Include="UniversalModuleDrivers\pwm.h">
-      <SubType>compile</SubType>
-      <Link>pwm.h</Link>
     </Compile>
     <Compile Include="UniversalModuleDrivers\rgbled.c">
       <SubType>compile</SubType>

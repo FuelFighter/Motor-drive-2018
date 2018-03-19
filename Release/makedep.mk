@@ -8,6 +8,8 @@ DigiCom.c
 
 speed.c
 
+UniversalModuleDrivers\pwm.c
+
 usart.c
 
 main.c
@@ -19,8 +21,6 @@ sensors.c
 UniversalModuleDrivers\adc.c
 
 UniversalModuleDrivers\can.c
-
-UniversalModuleDrivers\pwm.c
 
 UniversalModuleDrivers\rgbled.c
 

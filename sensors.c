@@ -13,7 +13,7 @@
 #define MAX_AMP 15.0
 #define MAX_TEMP 100
 #define TRANSDUCER_SENSIBILITY 0.0416
-#define TRANSDUCER_OFFSET 2.24
+#define TRANSDUCER_OFFSET 2.254
 #define LOWPASS_CONSTANT 0.1
 
 void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg)

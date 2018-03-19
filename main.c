@@ -74,7 +74,8 @@ ModuleValues_t ComValues = {
 	.motor_status = OFF,
 	.clutch = NEUTRAL,
 	.clutch_required = NEUTRAL,
-	.b_driver_status = 0 
+	.b_driver_status = 0,
+	.ctrl_type = CURRENT
 };
 
 int main(void)	
@@ -94,12 +95,9 @@ int main(void)
 	uart_init(BAUD_CALC(500000)); // 8n1 transmission is set as default
 	stdout = &uart0_io; // attach uart stream to stdout & stdin
 	stdin = &uart0_io; // uart0_in and uart0_out are only available if NO_USART_RX or NO_USART_TX is defined
-	
-	rgbled_init();
 	drivers_init();
-	sei();
 	
-	//_delay_ms(4000); // wait for BMS power up
+	sei();
 	
     while (1){
 		
@@ -122,6 +120,7 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	
 	if (systic_counter_fast == 1) // every 10ms
 	{
+		b_send_uart = 1;
 		if (ComValues.u16_watchdog == 0)
 		{
 			if (ComValues.motor_status != ERR)
@@ -139,10 +138,9 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	
 	if (systic_counter_slow == 100) // every 0.5s 
 	{
-		b_send_uart = 1;
+		send_can = 1;
 		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 500.0);
 		manage_LEDs(ComValues); //UM LED according to motor state
-		send_can = 1;
 		systic_counter_slow = 0;
 		} else {
 		systic_counter_slow ++;

@@ -125,20 +125,27 @@ void receive_uart(ModuleValues_t * vals)
 	if(uart_AvailableBytes()!=0 && vals->motor_status != ERR){
 		volatile uint16_t u16_data_received=uart_getint(); //in Amps. if >10, braking, else accelerating. eg : 12 -> brake 2 amps; 2 -> accel 2 amps
 		uart_flush();
-		if (u16_data_received >10 && u16_data_received <= 20)
+		if (vals->ctrl_type == CURRENT)
 		{
-			vals->u8_throttle_cmd = u16_data_received-10 ;
-			vals->motor_status = BRAKE ;
-		}
-		if (u16_data_received>0 && u16_data_received <= 10)
+			if (u16_data_received >10 && u16_data_received <= 20)
+			{
+				vals->u8_throttle_cmd = u16_data_received-10 ;
+				vals->motor_status = BRAKE ;
+			}
+			if (u16_data_received>0 && u16_data_received <= 10)
+			{
+				vals->u8_throttle_cmd = u16_data_received ;
+				vals->motor_status = ACCEL;
+			}
+			if (u16_data_received == 0)
+			{
+				vals->u8_throttle_cmd = u16_data_received ;
+				vals->motor_status = IDLE;
+			}
+		}else if (vals->ctrl_type == PWM)
 		{
-			vals->u8_throttle_cmd = u16_data_received ;
+			vals->u8_duty_cycle = u16_data_received;
 			vals->motor_status = ACCEL;
-		}
-		if (u16_data_received == 0)
-		{
-			vals->u8_throttle_cmd = u16_data_received ;
-			vals->motor_status = IDLE;
 		}
 	}
 }
@@ -147,25 +154,29 @@ void receive_uart(ModuleValues_t * vals)
 //sends motor current and current cmd through USB
 void send_uart(ModuleValues_t vals)
 {
-	printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.u8_throttle_cmd);
-// 	printf(",");
+	//printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.u8_throttle_cmd);
+
 // 	printf("%i",(int16_t)(vals.f32_batt_current*1000));
 // 	printf(",");
 // 	printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
 // 	printf(",");
 // 	printf("%u",vals.u8_car_speed);
 // 	printf(",");
-// 	printf("%u",vals.u8_duty_cycle);
-// 	printf(",");
+	printf("%u",(uint16_t)(vals.f32_batt_volt)*100);
+ 	printf(",");
+ 	printf("%u",vals.u8_duty_cycle*10);
+ 	printf(",");
 // 	printf("%u",vals.u8_motor_temp);
 // 	printf(",");
-// 	if (vals.motor_status == BRAKE)
-// 	{
-// 		printf("%i",-vals.u8_throttle_cmd*1000);
-// 	}else
-// 	{
-// 		printf("%i",vals.u8_throttle_cmd*1000);
-// 	}
+ 	if (vals.motor_status == BRAKE)
+ 	{
+ 		printf("%i",-vals.u8_throttle_cmd*1000);
+ 	}else
+ 	{
+ 		printf("%i",vals.u8_throttle_cmd*1000);
+ 	}
+	printf(",");
+	printf("%i",(int16_t)(vals.f32_motor_current*1000));
 	printf("\n");
 }
 

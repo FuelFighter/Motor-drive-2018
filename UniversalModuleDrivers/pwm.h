@@ -10,6 +10,13 @@
 #ifndef PWM_H_
 #define PWM_H_
 
+//defining PWM switching scheme
+#define SW_MODE BIPOLAR
+
+typedef enum {
+	UNIPOLAR = 0,
+	BIPOLAR = 1
+}sw_type_t;
 
 typedef enum {
 	PWM_PB4,
