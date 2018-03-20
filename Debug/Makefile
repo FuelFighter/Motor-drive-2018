@@ -40,14 +40,15 @@ SUBDIRS :=  \
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
 ../controller.c \
+../DigiCom.c \
 ../speed.c \
+../UniversalModuleDrivers/pwm.c \
 ../usart.c \
 ../main.c \
 ../pid.c \
 ../sensors.c \
 ../UniversalModuleDrivers/adc.c \
 ../UniversalModuleDrivers/can.c \
-../UniversalModuleDrivers/pwm.c \
 ../UniversalModuleDrivers/rgbled.c \
 ../UniversalModuleDrivers/spi.c \
 ../UniversalModuleDrivers/timer.c \
@@ -63,14 +64,15 @@ ASM_SRCS +=
 
 OBJS +=  \
 controller.o \
+DigiCom.o \
 speed.o \
+pwm.o \
 usart.o \
 main.o \
 pid.o \
 sensors.o \
 UniversalModuleDrivers/adc.o \
 UniversalModuleDrivers/can.o \
-pwm.o \
 UniversalModuleDrivers/rgbled.o \
 UniversalModuleDrivers/spi.o \
 UniversalModuleDrivers/timer.o \
@@ -79,14 +81,15 @@ usbdb.o
 
 OBJS_AS_ARGS +=  \
 controller.o \
+DigiCom.o \
 speed.o \
+pwm.o \
 usart.o \
 main.o \
 pid.o \
 sensors.o \
 UniversalModuleDrivers/adc.o \
 UniversalModuleDrivers/can.o \
-pwm.o \
 UniversalModuleDrivers/rgbled.o \
 UniversalModuleDrivers/spi.o \
 UniversalModuleDrivers/timer.o \
@@ -95,14 +98,15 @@ usbdb.o
 
 C_DEPS +=  \
 controller.d \
+DigiCom.d \
 speed.d \
+pwm.d \
 usart.d \
 main.d \
 pid.d \
 sensors.d \
 UniversalModuleDrivers/adc.d \
 UniversalModuleDrivers/can.d \
-pwm.d \
 UniversalModuleDrivers/rgbled.d \
 UniversalModuleDrivers/spi.d \
 UniversalModuleDrivers/timer.d \
@@ -111,14 +115,15 @@ usbdb.d
 
 C_DEPS_AS_ARGS +=  \
 controller.d \
+DigiCom.d \
 speed.d \
+pwm.d \
 usart.d \
 main.d \
 pid.d \
 sensors.d \
 UniversalModuleDrivers/adc.d \
 UniversalModuleDrivers/can.d \
-pwm.d \
 UniversalModuleDrivers/rgbled.d \
 UniversalModuleDrivers/spi.d \
 UniversalModuleDrivers/timer.d \
@@ -168,6 +173,8 @@ LINKER_SCRIPT_DEP+=
 
 
 
+
+
 ./%.o: .././%.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
@@ -175,14 +182,14 @@ LINKER_SCRIPT_DEP+=
 	@echo Finished building: $<
 	
 
-UniversalModuleDrivers/%.o: ../UniversalModuleDrivers/%.c
+./%.o: ../UniversalModuleDrivers/%.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DF_CPU=8000000UL  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.1.130\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -Werror -mmcu=at90can128 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.1.130\gcc\dev\at90can128" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
 	@echo Finished building: $<
 	
 
-./%.o: ../UniversalModuleDrivers/%.c
+UniversalModuleDrivers/%.o: ../UniversalModuleDrivers/%.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DF_CPU=8000000UL  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.1.130\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -Werror -mmcu=at90can128 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.1.130\gcc\dev\at90can128" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

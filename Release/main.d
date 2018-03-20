@@ -17,16 +17,16 @@ main.d main.o: .././main.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdlib.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stddef.h \
- .././speed.h .././sensors.h .././pid.h \
- .././UniversalModuleDrivers/usbdb.h \
+ .././speed.h .././sensors.h .././motor_controller_selection.h \
+ .././UniversalModuleDrivers/can.h \
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h \
+ .././controller.h .././pid.h .././UniversalModuleDrivers/usbdb.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h \
- .././controller.h .././UniversalModuleDrivers/spi.h \
- c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h \
+ .././DigiCom.h .././UniversalModuleDrivers/spi.h \
  .././UniversalModuleDrivers/timer.h .././UniversalModuleDrivers/rgbled.h \
- .././UniversalModuleDrivers/pwm.h .././UniversalModuleDrivers/can.h \
- .././UniversalModuleDrivers/adc.h .././UniversalModuleDrivers/uart.h \
- .././motor_controller_selection.h .././AVR-UART-lib-master/usart.h \
+ .././UniversalModuleDrivers/pwm.h .././UniversalModuleDrivers/adc.h \
+ .././UniversalModuleDrivers/uart.h .././AVR-UART-lib-master/usart.h \
  .././AVR-UART-lib-master/usart_config.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
@@ -69,6 +69,14 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\
 
 .././sensors.h:
 
+.././motor_controller_selection.h:
+
+.././UniversalModuleDrivers/can.h:
+
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h:
+
+.././controller.h:
+
 .././pid.h:
 
 .././UniversalModuleDrivers/usbdb.h:
@@ -77,11 +85,9 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h:
 
-.././controller.h:
+.././DigiCom.h:
 
 .././UniversalModuleDrivers/spi.h:
-
-c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h:
 
 .././UniversalModuleDrivers/timer.h:
 
@@ -89,13 +95,9 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\
 
 .././UniversalModuleDrivers/pwm.h:
 
-.././UniversalModuleDrivers/can.h:
-
 .././UniversalModuleDrivers/adc.h:
 
 .././UniversalModuleDrivers/uart.h:
-
-.././motor_controller_selection.h:
 
 .././AVR-UART-lib-master/usart.h:
 
