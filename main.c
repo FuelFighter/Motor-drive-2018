@@ -58,7 +58,7 @@ void timer0_init_ts(){
 	TCCR0A |= (1<<WGM01); //CTC
 	TCNT0 = 0; //reset timer value
 	TIMSK0 |= (1<<OCIE0A); //enable interrupt
-	OCR0A = 39; //compare value // 78 for 10ms, 39 for 5ms
+	OCR0A = 39; //compare value // 78 for 10ms, 39 for 5ms, 19 for 2.56ms
 } // => reload time timer 0 = 10ms
 
 ModuleValues_t ComValues = {
@@ -121,14 +121,19 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	if (systic_counter_fast == 1) // every 10ms
 	{
 		b_send_uart = 1;
-		if (ComValues.u16_watchdog == 0)
+		if (ComValues.u16_watchdog == 0 && CTRL_MODE) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
 		{
 			if (ComValues.motor_status != ERR)
 			{
 				ComValues.motor_status = OFF ;
 			}
 			}else{
-			ComValues.u16_watchdog -- ;
+				
+			if (ComValues.ctrl_type == CURRENT)
+			{
+				ComValues.u16_watchdog -- ;
+			}
+			
 		}
 		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;		
 		systic_counter_fast = 0;
@@ -196,7 +201,7 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 }
 
 
-ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in frot of the reed switch)
+ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
 {
 	u16_speed_count ++ ;
 }

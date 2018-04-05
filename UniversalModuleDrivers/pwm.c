@@ -36,7 +36,7 @@ void pwm_init(void){
 		TCCR3B &= ~((1<<CS32)|(1<<CS31));
 		
 		//Set top value for timer 3
-		ICR3 = 0x100; //20kHz
+		ICR3 = 0x85; //30kHz
 		
 		OCR3A = (int)((0.5)*ICR3) ; //PWM_PE3 (non inverted)
 		OCR3B = OCR3A ; //PWM_PE4 (inverted)
@@ -62,7 +62,7 @@ void pwm_init(void){
 		TCCR3B &= ~((1<<CS32)|(1<<CS31));
 		
 		//Set top value for timer 3
-		ICR3 = 0x100; 
+		ICR3 = 0x85; //30kHz = 85
 		
 		//initialising compare registers at Duty cycle 50%
 		OCR3A = (int)((0.5)*ICR3) ; //PWM_PE3

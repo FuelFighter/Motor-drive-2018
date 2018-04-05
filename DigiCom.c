@@ -83,7 +83,14 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 				if (rx->data.u8[3] > 10)
 				{
 					vals->motor_status = ACCEL ;
-					vals->u8_throttle_cmd = rx->data.u8[3]/10.0 ;
+					if (vals->ctrl_type == PWM)
+					{
+						vals->u8_duty_cycle = rx->data.u8[3]+40 ;
+					}else if (vals->ctrl_type == CURRENT)
+					{
+						vals->u8_throttle_cmd = rx->data.u8[3]/10.0 ;
+					}
+					
 				} else {
 					vals->motor_status = IDLE ;
 					vals->u8_throttle_cmd = 0;
@@ -120,7 +127,7 @@ void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
 ///////////////////  UART  ////////////////////
 
 //receiving 
-void receive_uart(ModuleValues_t * vals)
+void receive_uart(ModuleValues_t * vals) //  /!\ check in Digicom.h the #define CTRL_MODE
 {
 	if(uart_AvailableBytes()!=0 && vals->motor_status != ERR){
 		volatile uint16_t u16_data_received=uart_getint(); //in Amps. if >10, braking, else accelerating. eg : 12 -> brake 2 amps; 2 -> accel 2 amps
@@ -155,19 +162,14 @@ void receive_uart(ModuleValues_t * vals)
 void send_uart(ModuleValues_t vals)
 {
 	//printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.u8_throttle_cmd);
-
-// 	printf("%i",(int16_t)(vals.f32_batt_current*1000));
-// 	printf(",");
-// 	printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
-// 	printf(",");
-// 	printf("%u",vals.u8_car_speed);
-// 	printf(",");
-	printf("%u",(uint16_t)(vals.u8_motor_temp)*100);
+	printf("%i",(int16_t)(vals.f32_batt_current)*1000);
  	printf(",");
- 	printf("%u",vals.u8_duty_cycle*10);
- 	printf(",");
-// 	printf("%u",vals.u8_motor_temp);
-// 	printf(",");
+	printf("%u",(uint16_t)(vals.f32_batt_volt)*1000);
+	printf(",");
+	printf("%i",(int16_t)(vals.f32_motor_current)*1000);
+	printf(",");
+	printf("%u",vals.u8_duty_cycle);
+	/*
  	if (vals.motor_status == BRAKE)
  	{
  		printf("%i",-vals.u8_throttle_cmd*1000);
@@ -176,7 +178,7 @@ void send_uart(ModuleValues_t vals)
  		printf("%i",vals.u8_throttle_cmd*1000);
  	}
 	printf(",");
-	printf("%i",(int16_t)(vals.f32_motor_current*1000));
+	*/
 	printf("\n");
 }
 
