@@ -162,11 +162,11 @@ void receive_uart(ModuleValues_t * vals) //  /!\ check in Digicom.h the #define 
 void send_uart(ModuleValues_t vals)
 {
 	//printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.u8_throttle_cmd);
-	printf("%i",(int16_t)(vals.f32_batt_current)*1000);
+	printf("%i",(int16_t)(vals.f32_batt_current*1000));
  	printf(",");
-	printf("%u",(uint16_t)(vals.f32_batt_volt)*1000);
+	printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
 	printf(",");
-	printf("%i",(int16_t)(vals.f32_motor_current)*1000);
+	printf("%i",(int16_t)(vals.f32_motor_current*1000));
 	printf(",");
 	printf("%u",vals.u8_duty_cycle);
 	/*
