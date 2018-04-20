@@ -35,7 +35,7 @@ void SPI_handler_0(float * f32_motcurrent) // motor current
 	u8_rxBuffer[1]&= ~(0b111<<5);
 	u16_ADC0_reg = (u8_rxBuffer[1] << 8 ) | u8_rxBuffer[2];
 	
-	handle_current_sensor(f32_motcurrent, u16_ADC0_reg);
+	handle_current_sensor(f32_motcurrent, u16_ADC0_reg,0);
 }
 
 void SPI_handler_1(float * f32_batcurrent) // battery current
@@ -45,7 +45,7 @@ void SPI_handler_1(float * f32_batcurrent) // battery current
 	u8_rxBuffer[1]&= ~(0b111<<5);
 	u16_ADC1_reg = (u8_rxBuffer[1] << 8 ) | u8_rxBuffer[2];
 	
-	handle_current_sensor(f32_batcurrent, u16_ADC1_reg);
+	handle_current_sensor(f32_batcurrent, u16_ADC1_reg,1);
 }
 
 void SPI_handler_2(float * f32_batvolt) //battery voltage
@@ -114,10 +114,11 @@ void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
 	
 	if(*send){
 		txFrame.data.u8[0] = vals->motor_status;
-		txFrame.data.u8[1] = 0;
+		txFrame.data.u8[1] = vals->u8_duty_cycle;
 		txFrame.data.u16[1] = (uint16_t)(vals->f32_motor_current);
 		txFrame.data.u16[2] = (uint16_t)(vals->f32_energy*1000) ;
-		txFrame.data.u16[3] = (uint16_t)(vals->u8_car_speed) ;
+		txFrame.data.u16[3] = vals->u8_car_speed ;
+		//add motor temp
 		
 		can_send_message(&txFrame);
 		*send = 0;
@@ -169,6 +170,8 @@ void send_uart(ModuleValues_t vals)
 	printf("%i",(int16_t)(vals.f32_motor_current*1000));
 	printf(",");
 	printf("%u",vals.u8_duty_cycle);
+	printf(",");
+	printf("%u",vals.u8_throttle_cmd);
 	/*
  	if (vals.motor_status == BRAKE)
  	{

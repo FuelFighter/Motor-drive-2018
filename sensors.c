@@ -10,16 +10,25 @@
 #include <avr/io.h>
 
 #define MAX_VOLT 55.0
+#define MIN_VOLT 15.0
 #define MAX_AMP 15.0
 #define MAX_TEMP 100
 #define TRANSDUCER_SENSIBILITY 0.0416
-#define TRANSDUCER_OFFSET 2.24
+#define TRANSDUCER_OFFSET 2.52
+#define CORRECTION_OFFSET_BAT 1.0
+#define CORRECTION_OFFSET_MOT 1.19
 #define LOWPASS_CONSTANT 0.1
 
-void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg)
+void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num)
 {
-	volatile float f_new_current = ((((float)u16_ADC_reg*5/4096) - TRANSDUCER_OFFSET)/TRANSDUCER_SENSIBILITY)/3 ;// /3 because current passes 3x in transducer for more precision.
-	f_new_current = (f_new_current-1.76);// correction of offset and ramp error (conversion + hardware) measured with ampmeter of the power supply : bad
+	volatile float f_new_current = ((((float)u16_ADC_reg*5/4096) - TRANSDUCER_OFFSET)/TRANSDUCER_SENSIBILITY) ;// /3 because current passes 3x in transducer for more precision.
+	if (u8_sensor_num)
+	{//batt
+		f_new_current = (f_new_current+CORRECTION_OFFSET_BAT);// correction of offset
+	}else{
+		f_new_current = (f_new_current+CORRECTION_OFFSET_MOT);// correction of offset
+	}
+	
 	*f32_current = (*f32_current)*(1-LOWPASS_CONSTANT) + LOWPASS_CONSTANT*f_new_current ;// low pass filter ---------------------TODO test
 }
 
@@ -57,12 +66,12 @@ void handle_joulemeter(float *f32_energy, float f32_bat_current, float f32_bat_v
 
 void err_check(ModuleValues_t * vals) 
 {
-	if ((vals->f32_batt_volt < MAX_AMP || vals->f32_batt_volt > 100.0) && vals->motor_status != ERR) //under voltage. When the voltage is too low, the external ADC is not working properly and gives a huge voltage value.
+	if ((vals->f32_batt_volt < MIN_VOLT  || vals->f32_batt_volt > 100.0) && vals->motor_status != ERR) //under voltage. When the voltage is too low, the external ADC is not working properly and gives a huge voltage value.
 	{
 		vals->motor_status = OFF;
 	}
 	
-	if (vals->f32_motor_current >= MAX_AMP || (vals->f32_batt_volt > MAX_VOLT && vals->f32_batt_volt < 100.0) || vals->u8_motor_temp >= MAX_TEMP) //over current, over voltage, over temp
+	if ((vals->f32_batt_volt < 100.0) && (vals->f32_motor_current >= MAX_AMP || (vals->f32_batt_volt > MAX_VOLT) || vals->u8_motor_temp >= MAX_TEMP)) //over current, over voltage, over temp
 	{
 		vals->motor_status = ERR;
 	}

@@ -133,8 +133,7 @@ void manage_motor(ModuleValues_t * vals)
 		case IDLE :
 			drivers(1); //drivers turn on
 			vals->b_driver_status = 1;
-			vals->u8_throttle_cmd = 0;
-			controller(0, vals->f32_motor_current, &vals->u8_duty_cycle,vals->ctrl_type); //current law running with 0 torque 
+			controller(vals->u8_throttle_cmd, vals->f32_motor_current, &vals->u8_duty_cycle,vals->ctrl_type); //current law running with 0 torque 
 			//(integrator naturally following the speed of the car as it decreases, to prevent a big step at the next acceleration.)
 		break;
 		

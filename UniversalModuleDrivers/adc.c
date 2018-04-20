@@ -75,7 +75,7 @@ void Set_ADC_Channel(adc_channel_t channel)
 	ADMUX = (ADMUX & 0xF8)|channel; // clears the bottom 3 bits before ORing
 }
 
-void Set_ADC_Channel_ext(uint8_t u8_CHn, uint8_t * u8_ADC_tx)
+void Set_ADC_Channel_ext(uint8_t u8_CHn, uint8_t * u8_ADC_tx) //for MCP3208 external ADC
 {
 	switch(u8_CHn)
 	{

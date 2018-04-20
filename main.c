@@ -101,16 +101,19 @@ int main(void)
 	
     while (1){
 		
-		handle_motor_status_can_msg(&send_can, &ComValues); //send CAN
-		handle_can(&ComValues, &rxFrame); //receive CAN
+		if (CTRL_MODE)
+		{//CAN bus ctrl mode
+			handle_motor_status_can_msg(&send_can, &ComValues); //send CAN
+			handle_can(&ComValues, &rxFrame); //receive CAN
+		}else{//UART ctrl mode
+			receive_uart(&ComValues);
+		}		
 		
 		if (b_send_uart)
 		{
 			send_uart(ComValues);
 			b_send_uart = 0;
 		}
-		receive_uart(&ComValues);
-		
 		err_check(&ComValues); //verifying current, temperature and voltage
 	}
 }
