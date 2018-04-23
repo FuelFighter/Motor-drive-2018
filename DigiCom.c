@@ -76,30 +76,30 @@ void SPI_handler_4(uint8_t * u8_mottemp) //motor temperature
 void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 	if (can_read_message_if_new(rx) && vals->motor_status != ERR){
 		switch (rx->id){
-			case STEERING_WHEEL_CAN_ID	: //receiving can messages from the steering wheel
+			case DASHBOARD_CAN_ID	: //receiving can messages from the steering wheel
 				
+				vals->message_mode = CAN ;
 				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ; // resetting to max value each time a message is received.
 
-				if (rx->data.u8[3] > 10)
+				if (rx->data.u8[3] > 10 && (vals->motor_status == IDLE || vals->motor_status == ACCEL))
 				{
-					vals->motor_status = ACCEL ;
 					if (vals->ctrl_type == PWM)
 					{
 						vals->u8_duty_cycle = rx->data.u8[3]+40 ;
 					}else if (vals->ctrl_type == CURRENT)
 					{
-						vals->u8_throttle_cmd = rx->data.u8[3]/10.0 ;
+						vals->i8_throttle_cmd = rx->data.u8[3]/10.0 ;
 					}
 					
 				} else {
-					vals->motor_status = IDLE ;
-					vals->u8_throttle_cmd = 0;
+					vals->i8_throttle_cmd = 0;
 				}
 				
-				if (rx->data.u8[2] > 25 && vals->motor_status == IDLE)
+				if (rx->data.u8[2] > 25 && (vals->motor_status == IDLE || vals->motor_status == BRAKE))
 				{
-					vals->motor_status = BRAKE ;
-					vals->u8_throttle_cmd = rx->data.u8[2]/10.0 ;
+					vals->i8_throttle_cmd = -rx->data.u8[2]/20.0 ;
+				}else{
+					vals->i8_throttle_cmd = 0;
 				}
 			break;
 		}
@@ -128,32 +128,88 @@ void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
 ///////////////////  UART  ////////////////////
 
 //receiving 
-void receive_uart(ModuleValues_t * vals) //  /!\ check in Digicom.h the #define CTRL_MODE
+uint8_t u8_uart_welcome = 0;
+void receive_uart(ModuleValues_t * vals)
 {
-	if(uart_AvailableBytes()!=0 && vals->motor_status != ERR){
-		volatile uint16_t u16_data_received=uart_getint(); //in Amps. if >10, braking, else accelerating. eg : 12 -> brake 2 amps; 2 -> accel 2 amps
-		uart_flush();
-		if (vals->ctrl_type == CURRENT)
+	if(uart_AvailableBytes()!=0){
+		
+		if (u8_uart_welcome == 2 && vals->message_mode == UART)
 		{
-			if (u16_data_received >10 && u16_data_received <= 20)
+			volatile int16_t i16_data_received=uart_getint();
+			uart_flush();
+			
+			if (i16_data_received == 11)
 			{
-				vals->u8_throttle_cmd = u16_data_received-10 ;
-				vals->motor_status = BRAKE ;
+				vals->ctrl_type = CURRENT;
+				printf("\nCURRENT control mode activated.\n");
+				vals->b_send_uart_data = 1;
+				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
 			}
-			if (u16_data_received>0 && u16_data_received <= 10)
+			
+			if (i16_data_received == 12)
 			{
-				vals->u8_throttle_cmd = u16_data_received ;
-				vals->motor_status = ACCEL;
+				vals->ctrl_type = PWM;
+				printf("\nPWM control mode activated.\n");
+				vals->b_send_uart_data = 1;
+				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
 			}
-			if (u16_data_received == 0)
+			
+			if (i16_data_received == 13)
 			{
-				vals->u8_throttle_cmd = u16_data_received ;
-				vals->motor_status = IDLE;
+				vals->u16_watchdog = 0;
+				printf("\nTurning off.\n");
+				printf("Drivers deactivated.\n");
+				vals->b_send_uart_data = 0;
 			}
-		}else if (vals->ctrl_type == PWM)
+			
+			if (vals->ctrl_type == CURRENT)
+			{
+				if (i16_data_received > -10 && i16_data_received < 10) //limited braking and acceleration at 10A
+				{
+					vals->i8_throttle_cmd = i16_data_received ;
+				}
+				
+			}else if (vals->ctrl_type == PWM)
+			{
+				vals->u8_duty_cycle = i16_data_received;
+			}
+		}
+		
+		if (u8_uart_welcome == 1)
 		{
-			vals->u8_duty_cycle = u16_data_received;
-			vals->motor_status = ACCEL;
+			volatile int16_t i16_choice_received=uart_getint();
+			uart_flush();
+			if (i16_choice_received == 1)
+			{//can ctrl
+				printf("\n CAN control mode. sending data.\n");
+				vals->b_send_uart_data = 1;
+				u8_uart_welcome = 2;
+			}
+			if (i16_choice_received == 2)
+			{//uart ctrl
+				vals->message_mode = UART ;
+				u8_uart_welcome = 2;
+				printf("UART message mode activated.\n\n");
+				
+				printf("for CURRENT control mode, write: 11, followed by a space\n");
+				printf("for PWM control mode, write:     12, followed by a space\n");
+				printf("to turn OFF, write:              13, followed by a space\n\n");
+				
+				printf("In CURRENT, for acceleration or braking, write the number of Amps (integers, [-10 10]), followed by a space\n\n");
+				
+				printf("In PWM, write the duty cycle (integers, [5 95]), followed by a space\n");
+			}
+		}
+		
+		if (u8_uart_welcome == 0)
+		{
+			//first uart cmd received
+			printf("Welcome to the UART interface of motor drive v2.1.\n");
+			printf("To use the CAN bus as control medium, type: 1 followed by a space.\n");
+			printf("To use the UART as control medium, type:    2 followed by a space.\n");
+			volatile int16_t useless=uart_getint();
+			uart_flush();
+			u8_uart_welcome = 1;
 		}
 	}
 }
@@ -162,27 +218,20 @@ void receive_uart(ModuleValues_t * vals) //  /!\ check in Digicom.h the #define 
 //sends motor current and current cmd through USB
 void send_uart(ModuleValues_t vals)
 {
-	//printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.u8_throttle_cmd);
-	printf("%i",(int16_t)(vals.f32_batt_current*1000));
- 	printf(",");
-	printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
-	printf(",");
-	printf("%i",(int16_t)(vals.f32_motor_current*1000));
-	printf(",");
-	printf("%u",vals.u8_duty_cycle);
-	printf(",");
-	printf("%u",vals.u8_throttle_cmd);
-	/*
- 	if (vals.motor_status == BRAKE)
- 	{
- 		printf("%i",-vals.u8_throttle_cmd*1000);
- 	}else
- 	{
- 		printf("%i",vals.u8_throttle_cmd*1000);
- 	}
-	printf(",");
-	*/
-	printf("\n");
+	if (vals.b_send_uart_data)
+	{
+		//printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.i8_throttle_cmd);
+		printf("%i",(int16_t)(vals.f32_batt_current*1000));
+		printf(",");
+		printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
+		printf(",");
+		printf("%i",(int16_t)(vals.f32_motor_current*1000));
+		printf(",");
+		printf("%u",vals.u8_duty_cycle);
+		printf(",");
+		printf("%u",vals.i8_throttle_cmd);
+		printf("\n");
+	}
 }
 
 ///////////////// LED /////////////////////

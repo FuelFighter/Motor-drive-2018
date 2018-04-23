@@ -11,9 +11,9 @@
 #define DIGICOM_H_
 
 #include "motor_controller_selection.h"
+#include "state_machine.h"
 #include "UniversalModuleDrivers/can.h"
 
-#define CTRL_MODE 0 //CAN bus ctrl mode : 1  UART ctrl mode : 0
 
 // CAN Types
 CanMessage_t rxFrame;

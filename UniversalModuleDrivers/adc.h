@@ -19,6 +19,7 @@ typedef enum {
 	CH_ADC5 = 0b00101,
 	CH_ADC6 = 0b00110,
 	CH_ADC7 = 0b00111,
+
 	//CH_DIFF_0_0_10X = 0b01000,
 	CH_DIFF_1_0_10X = 0b01001,
 	//CH_DIFF_0_0_200X = 0b01010,

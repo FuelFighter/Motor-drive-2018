@@ -9,10 +9,6 @@
 #include "sensors.h"
 #include <avr/io.h>
 
-#define MAX_VOLT 55.0
-#define MIN_VOLT 15.0
-#define MAX_AMP 15.0
-#define MAX_TEMP 100
 #define TRANSDUCER_SENSIBILITY 0.0416
 #define TRANSDUCER_OFFSET 2.52
 #define CORRECTION_OFFSET_BAT 1.0
@@ -62,22 +58,4 @@ void handle_temp_sensor(uint8_t *u8_temp, uint16_t u16_ADC_reg)
 void handle_joulemeter(float *f32_energy, float f32_bat_current, float f32_bat_voltage, uint8_t u8_time_period) //units : A, V, ms
 {
 	*f32_energy += f32_bat_voltage*f32_bat_current*(float)u8_time_period/1000 ;
-}
-
-void err_check(ModuleValues_t * vals) 
-{
-	if ((vals->f32_batt_volt < MIN_VOLT  || vals->f32_batt_volt > 100.0) && vals->motor_status != ERR) //under voltage. When the voltage is too low, the external ADC is not working properly and gives a huge voltage value.
-	{
-		vals->motor_status = OFF;
-	}
-	
-	if ((vals->f32_batt_volt < 100.0) && (vals->f32_motor_current >= MAX_AMP || (vals->f32_batt_volt > MAX_VOLT) || vals->u8_motor_temp >= MAX_TEMP)) //over current, over voltage, over temp
-	{
-		vals->motor_status = ERR;
-	}
-	
-	if (vals->u8_motor_temp < MAX_TEMP && vals->motor_status == ERR && vals->f32_motor_current < MAX_AMP && vals->f32_batt_volt <= MAX_VOLT)// leaving error state if motor cools down
-	{
-		vals->motor_status = OFF;
-	}
 }

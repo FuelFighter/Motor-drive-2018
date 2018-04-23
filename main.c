@@ -23,7 +23,7 @@
 #include "UniversalModuleDrivers/can.h"
 #include "UniversalModuleDrivers/adc.h"
 #include "UniversalModuleDrivers/uart.h"
-#include "motor_controller_selection.h"
+#include "state_machine.h"
 #include "AVR-UART-lib-master/usart.h"
 
 #define USE_USART0
@@ -33,7 +33,7 @@ static uint8_t systic_counter_fast = 0;
 static uint16_t systic_counter_slow = 0;
 
 //for CAN
-static uint8_t send_can = 0;
+static uint8_t b_send_can = 0;
 
 //for UART
 uint8_t b_send_uart = 0;
@@ -68,14 +68,16 @@ ModuleValues_t ComValues = {
 	.f32_energy = 0.0,
 	.u8_motor_temp = 0,
 	.u8_car_speed = 0,
-	.u8_throttle_cmd = 0, //in amps
+	.i8_throttle_cmd = 0, //in amps
 	.u8_duty_cycle = 50,
-	.u16_watchdog = WATCHDOG_RELOAD_VALUE,
+	.u16_watchdog = 0,
 	.motor_status = OFF,
 	.clutch = NEUTRAL,
 	.clutch_required = NEUTRAL,
 	.b_driver_status = 0,
-	.ctrl_type = CURRENT
+	.ctrl_type = CURRENT,
+	.message_mode = CAN,
+	.b_send_uart_data = 0
 };
 
 int main(void)	
@@ -101,20 +103,19 @@ int main(void)
 	
     while (1){
 		
-		if (CTRL_MODE)
-		{//CAN bus ctrl mode
-			handle_motor_status_can_msg(&send_can, &ComValues); //send CAN
-			handle_can(&ComValues, &rxFrame); //receive CAN
-		}else{//UART ctrl mode
-			receive_uart(&ComValues);
-		}		
+		handle_can(&ComValues, &rxFrame); //receive CAN
+		receive_uart(&ComValues);
+		
+		if (b_send_can)
+		{
+			handle_motor_status_can_msg(&b_send_can, &ComValues); //send CAN
+		}
 		
 		if (b_send_uart)
 		{
 			send_uart(ComValues);
 			b_send_uart = 0;
 		}
-		err_check(&ComValues); //verifying current, temperature and voltage
 	}
 }
 
@@ -124,20 +125,11 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	if (systic_counter_fast == 1) // every 10ms
 	{
 		b_send_uart = 1;
-		if (ComValues.u16_watchdog == 0 && CTRL_MODE) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
+		if (ComValues.u16_watchdog != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
 		{
-			if (ComValues.motor_status != ERR)
-			{
-				ComValues.motor_status = OFF ;
-			}
-			}else{
-				
-			if (ComValues.ctrl_type == CURRENT)
-			{
-				ComValues.u16_watchdog -- ;
-			}
-			
+			ComValues.u16_watchdog -- ;
 		}
+		
 		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;		
 		systic_counter_fast = 0;
 	} else {
@@ -146,15 +138,14 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	
 	if (systic_counter_slow == 100) // every 0.5s 
 	{
-		send_can = 1;
+		b_send_can = 1;
 		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 500.0);
 		manage_LEDs(ComValues); //UM LED according to motor state
 		systic_counter_slow = 0;
 		} else {
 		systic_counter_slow ++;
 	}
-	
-	manage_motor(&ComValues);
+	state_handler(&ComValues);
 }
 
 
