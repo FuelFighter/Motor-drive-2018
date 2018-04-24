@@ -11,8 +11,8 @@
 
 #define TRANSDUCER_SENSIBILITY 0.0416
 #define TRANSDUCER_OFFSET 2.52
-#define CORRECTION_OFFSET_BAT 1.0
-#define CORRECTION_OFFSET_MOT 1.19
+#define CORRECTION_OFFSET_BAT 0.98
+#define CORRECTION_OFFSET_MOT 1.25
 #define LOWPASS_CONSTANT 0.1
 
 void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num)

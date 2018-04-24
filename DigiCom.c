@@ -79,28 +79,24 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 			case DASHBOARD_CAN_ID	: //receiving can messages from the steering wheel
 				
 				vals->message_mode = CAN ;
+				vals->ctrl_type = CURRENT ;
 				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ; // resetting to max value each time a message is received.
 
 				if (rx->data.u8[3] > 10 && (vals->motor_status == IDLE || vals->motor_status == ACCEL))
 				{
-					if (vals->ctrl_type == PWM)
-					{
-						vals->u8_duty_cycle = rx->data.u8[3]+40 ;
-					}else if (vals->ctrl_type == CURRENT)
-					{
-						vals->i8_throttle_cmd = rx->data.u8[3]/10.0 ;
-					}
-					
-				} else {
-					vals->i8_throttle_cmd = 0;
+					vals->i8_throttle_cmd = rx->data.u8[3]/10.0 ;
 				}
 				
 				if (rx->data.u8[2] > 25 && (vals->motor_status == IDLE || vals->motor_status == BRAKE))
 				{
 					vals->i8_throttle_cmd = -rx->data.u8[2]/20.0 ;
-				}else{
+				}
+				
+				if (rx->data.u8[2] <= 25 && rx->data.u8[3] <= 10)
+				{
 					vals->i8_throttle_cmd = 0;
 				}
+				
 			break;
 		}
 	}
@@ -229,7 +225,7 @@ void send_uart(ModuleValues_t vals)
 		printf(",");
 		printf("%u",vals.u8_duty_cycle);
 		printf(",");
-		printf("%u",vals.i8_throttle_cmd);
+		printf("%i",vals.i8_throttle_cmd);
 		printf("\n");
 	}
 }
