@@ -15,8 +15,8 @@
 #define PI 3.14
 #define COUNT_TO_DISTANCE D_WHEEL*PI/N_MAG
 #define LOWPASS_CONSTANT_S 0.1
-#define GEAR_RATIO_1
-#define GEAR_RATIO_2
+#define GEAR_RATIO_1 1
+#define GEAR_RATIO_2 1
 #define VOLT_SPEED_CST 102.0 //rmp/V
 
 void speed_init()
@@ -41,12 +41,14 @@ void handle_speed_sensor(uint8_t *u8_speed,uint16_t *u16_counter, uint16_t u16_p
 
 uint8_t compute_synch_duty(uint8_t speed_ms, ClutchState_t gear, float vbatt) // computing the duty cycle to reach synchronous speed before engaging the gears
 {
+	volatile uint8_t Duty = 50 ;
 	if (gear == GEAR1)
 	{
-		return (VOLT_SPEED_CST/((float)speed_ms*60.0/(PI*D_WHEEL*GEAR_RATIO_1)))/(2.0*vbatt) + 0.5 // Vm/2Vbatt +0.5
+		Duty = (VOLT_SPEED_CST/((float)speed_ms*60.0/(PI*D_WHEEL*GEAR_RATIO_1)))/(2.0*vbatt) + 0.5 ;// Vm/2Vbatt +0.5
 	}
 	if (gear == GEAR2)
 	{
-		return (VOLT_SPEED_CST/((float)speed_ms*60.0/(PI*D_WHEEL*GEAR_RATIO_2)))/(2.0*vbatt) + 0.5 // Vm/2Vbatt +0.5
+		Duty = (VOLT_SPEED_CST/((float)speed_ms*60.0/(PI*D_WHEEL*GEAR_RATIO_2)))/(2.0*vbatt) + 0.5 ;// Vm/2Vbatt +0.5
 	}
+	return Duty ;
 }

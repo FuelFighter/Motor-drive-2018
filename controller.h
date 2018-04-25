@@ -15,7 +15,7 @@
 
 void reset_I(void) ;
 void set_I(uint8_t duty) ;
-void controller(ModuleValues_t vals);
+void controller(ModuleValues_t *vals);
 void drivers(uint8_t b_state);
 void drivers_init();
 #endif /* CONTROLLER_H_ */

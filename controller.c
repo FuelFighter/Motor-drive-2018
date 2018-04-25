@@ -77,7 +77,7 @@ void controller(ModuleValues_t *vals){
 	
 	}else if (vals->ctrl_type == PWM)
 	{
-		f32_DutyCycleCmd = (float)*vals->u8_duty_cycle;
+		f32_DutyCycleCmd = (float)(vals->u8_duty_cycle);
 	}
 	
 	

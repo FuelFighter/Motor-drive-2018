@@ -101,7 +101,8 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 			break;
 			
 			case E_CLUTCH_CAN_ID :
-				vals->gear_status = rx->data.u8[0] //receiving gear status from the clutch
+				vals->pwtrain_type = GEAR ;
+				vals->gear_status = rx->data.u8[0] ; //receiving gear status from the clutch
 			break;
 		}
 	}
@@ -117,8 +118,8 @@ void handle_motor_status_can_msg(ModuleValues_t vals){
 	txFrame.data.u8[1] = vals.u8_duty_cycle;
 	txFrame.data.u16[1] = (uint16_t)(vals.f32_motor_current);
 	txFrame.data.u16[2] = (uint16_t)(vals.f32_energy*1000) ;
-	txFrame.data.u16[3] = vals.u8_car_speed/10 ; //real part
-	txFrame.data.u16[4] = vals.u8_car_speed-(vals.u8_car_speed/10)*10 ; //decimal part
+	txFrame.data.u16[3] = vals.u8_car_speed*36 ; //100 = 10.0km/h
+	//txFrame.data.u16[4] = vals.u8_car_speed-(vals.u8_car_speed/10)*10 ; //decimal part
 	//add motor temp
 		
 	can_send_message(&txFrame);
@@ -251,6 +252,12 @@ void manage_LEDs(ModuleValues_t vals)
 		case OFF :
 			rgbled_turn_off(LED_GREEN);
 			rgbled_turn_off(LED_RED);
+			rgbled_turn_on(LED_BLUE);
+		break ;
+		
+		case ENGAGE :
+			rgbled_turn_off(LED_RED);
+			rgbled_turn_on(LED_GREEN);
 			rgbled_turn_on(LED_BLUE);
 		break ;
 		

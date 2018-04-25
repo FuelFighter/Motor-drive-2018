@@ -109,8 +109,8 @@ int main(void)
 		
 		if (b_send_can)
 		{
-			handle_motor_status_can_msg(&ComValues); //send motor status on CAN
-			handle_clutch_cmd_can_msg(&ComValues); // send clutch command on CAN
+			handle_motor_status_can_msg(ComValues); //send motor status on CAN
+			handle_clutch_cmd_can_msg(ComValues); // send clutch command on CAN
 			b_send_can = 0;
 		}
 		

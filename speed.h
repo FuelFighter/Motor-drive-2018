@@ -7,6 +7,8 @@
  */ 
 
 #include <avr/io.h>
+#include "state_machine.h"
+
 #ifndef SPEED_H_
 #define SPEED_H_
 
