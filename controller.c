@@ -49,9 +49,14 @@ void reset_I(void)
 	f32_Integrator = 0;
 }
 
-void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty, ControlType_t ctrlType){
+void set_I(uint8_t duty)
+{
+	f32_Integrator = duty;
+}
 
-	if (ctrlType == CURRENT)
+void controller(ModuleValues_t *vals){
+
+	if (vals->ctrl_type == CURRENT)
 	{
 		if (f32_DutyCycleCmd >= 95 || f32_DutyCycleCmd <= 50)
 		{
@@ -60,7 +65,7 @@ void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty
 			b_saturation = 0;
 		}
 		
-		f32_CurrentDelta = (f32_current_cmd-f32_prev_current)	;
+		f32_CurrentDelta = ((float)(vals->i8_throttle_cmd)-vals->f32_motor_current)	;
 		
 		if (!b_saturation) // prevents over integration of an error that cannot be dealt with (because the duty cycle reaches a limit) integral windup protection
 		{
@@ -70,9 +75,9 @@ void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty
 		f32_DutyCycleCmd=Kp*f32_CurrentDelta+f32_Integrator*Ki ;
 		f32_DutyCycleCmd=f32_DutyCycleCmd+50.0 ;
 	
-	}else if (ctrlType == PWM)
+	}else if (vals->ctrl_type == PWM)
 	{
-		f32_DutyCycleCmd = (float)*u8_duty;
+		f32_DutyCycleCmd = (float)*vals->u8_duty_cycle;
 	}
 	
 	
@@ -96,7 +101,7 @@ void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty
 		OCR3B = (int)(ICR3-(f32_DutyCycleCmd/100.0)*ICR3) ; //PWM_PE4
 	}
 	
-	*u8_duty = (uint16_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
+	vals->u8_duty_cycle = (uint16_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
 }
 
 void drivers_init() // defining pin PB4 as logical output

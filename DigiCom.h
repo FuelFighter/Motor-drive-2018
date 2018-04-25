@@ -28,7 +28,8 @@ void SPI_handler_2(float * f32_batvolt); //battery voltage
 void SPI_handler_4(uint8_t * u8_mottemp); //motor temperature
 
 //CAN
-void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals); //sendinng
+void handle_motor_status_can_msg(ModuleValues_t *vals); //sending status
+void handle_clutch_cmd_can_msg(ModuleValues_t *vals); //sending required gear to clutch
 void handle_can(ModuleValues_t *vals, CanMessage_t *rx); //receiving
 
 //UART

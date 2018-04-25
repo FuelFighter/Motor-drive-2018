@@ -3,7 +3,7 @@
  *
  * Created: 11/01/2018 17:34:26
  * Author : Tanguy Simon for DNV GL Fuel fighter
- * Corresponding Hardware : Motor Drive V2.0
+ * Corresponding Hardware : Motor Drive V2.1
  */ 
 
 #include "speed.h"
@@ -15,6 +15,9 @@
 #define PI 3.14
 #define COUNT_TO_DISTANCE D_WHEEL*PI/N_MAG
 #define LOWPASS_CONSTANT_S 0.1
+#define GEAR_RATIO_1
+#define GEAR_RATIO_2
+#define VOLT_SPEED_CST 102.0 //rmp/V
 
 void speed_init()
 {
@@ -34,4 +37,16 @@ void handle_speed_sensor(uint8_t *u8_speed,uint16_t *u16_counter, uint16_t u16_p
 	//*u8_speed = (*u8_speed)*(1-LOWPASS_CONSTANT_S) + LOWPASS_CONSTANT_S*u8_new_speed ;// low pass filter
 	*u8_speed = u8_new_speed ;
 	*u16_counter = 0 ;
+}
+
+uint8_t compute_synch_duty(uint8_t speed_ms, ClutchState_t gear, float vbatt) // computing the duty cycle to reach synchronous speed before engaging the gears
+{
+	if (gear == GEAR1)
+	{
+		return (VOLT_SPEED_CST/((float)speed_ms*60.0/(PI*D_WHEEL*GEAR_RATIO_1)))/(2.0*vbatt) + 0.5 // Vm/2Vbatt +0.5
+	}
+	if (gear == GEAR2)
+	{
+		return (VOLT_SPEED_CST/((float)speed_ms*60.0/(PI*D_WHEEL*GEAR_RATIO_2)))/(2.0*vbatt) + 0.5 // Vm/2Vbatt +0.5
+	}
 }

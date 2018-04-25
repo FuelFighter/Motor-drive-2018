@@ -9,6 +9,7 @@
 #include <avr/io.h>
 #include "state_machine.h"
 #include "controller.h"
+#include "speed.h"
 
 #define MAX_VOLT 55.0
 #define MIN_VOLT 15.0
@@ -16,6 +17,7 @@
 #define MAX_TEMP 100
 
 static uint8_t b_major_fault = 0;
+static ControlType_t save_ctrl_type ;
 
 void state_handler(ModuleValues_t * vals)
 {
@@ -29,7 +31,7 @@ void state_handler(ModuleValues_t * vals)
 	switch(vals->motor_status)
 	{
 		case OFF:
-			//transition 1, CAN
+			//transition 1
 			if (vals->u16_watchdog > 0 && b_board_powered)
 			{
 				vals->motor_status = IDLE;
@@ -40,23 +42,66 @@ void state_handler(ModuleValues_t * vals)
 			reset_I(); //reset integrator
 			vals->i8_throttle_cmd = 0;
 			vals->u8_duty_cycle = 50;
+			vals->gear_required = NEUTRAL ;
 		
 		break;
 		
 		case IDLE: 
-			//transition 5
-			if (vals->i8_throttle_cmd > 0)
+		
+			if (vals->pwtrain_type == BELT)
+			{
+				//transition 5
+				if (vals->i8_throttle_cmd > 0)
+				{
+					vals->motor_status = ACCEL;
+				}
+				//transition 7
+				if (vals->i8_throttle_cmd < 0)
+				{
+					vals->motor_status = BRAKE;
+				}
+				drivers(1);//drivers enable
+				controller(vals); //current loop running with 0 torque
+				//(integrator naturally following the speed of the car as it decreases, to prevent a big step at the next acceleration.)
+			}
+			
+			if (vals->pwtrain_type == GEAR)
+			{
+				//transition 5
+				if (vals->i8_throttle_cmd != 0)
+				{
+					vals->motor_status = ENGAGE;
+				}
+				drivers(0); //disable
+				vals->gear_required = NEUTRAL ;
+				reset_I();
+			}
+			
+		break;
+		
+		case ENGAGE: // /!\ TODO : with the two gears, all turning motion has to be inverted for the inner gear.
+			drivers(1);
+			vals->gear_required = GEAR1;
+			vals->u8_duty_cycle = compute_synch_duty(vals->u8_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
+			set_I(vals->u8_duty_cycle) ; //set integrator
+			save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
+			vals->ctrl_type = PWM ;
+			controller(vals) ; //speed up motor to synch speed
+			//transition 10, GEAR
+			if (vals->i8_throttle_cmd > 0 && vals->gear_status == vals->gear_required && vals->gear_status != NEUTRAL)
 			{
 				vals->motor_status = ACCEL;
 			}
-			//transition 7
-			if (vals->i8_throttle_cmd < 0)
+			//transition 9, GEAR
+			if (vals->i8_throttle_cmd < 0 && vals->gear_status == vals->gear_required && vals->gear_status != NEUTRAL)
 			{
 				vals->motor_status = BRAKE;
 			}
-			drivers(1);//drivers enable
-			controller(vals->i8_throttle_cmd, vals->f32_motor_current, &vals->u8_duty_cycle,vals->ctrl_type); //current law running with 0 torque
-			//(integrator naturally following the speed of the car as it decreases, to prevent a big step at the next acceleration.)
+			//transition 11, GEAR
+			if (vals->i8_throttle_cmd == 0)
+			{
+				vals->motor_status = IDLE;
+			}
 		break;
 		
 		case ACCEL:
@@ -65,7 +110,13 @@ void state_handler(ModuleValues_t * vals)
 			{
 				vals->motor_status = IDLE;
 			}
-			controller(vals->i8_throttle_cmd, vals->f32_motor_current, &vals->u8_duty_cycle,vals->ctrl_type);
+			//transition 12, GEAR
+			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
+			{
+				vals->motor_status = ENGAGE;
+			}
+			vals->ctrl_type = save_ctrl_type ;
+			controller(vals);
 		break;
 		
 		case BRAKE:
@@ -74,20 +125,27 @@ void state_handler(ModuleValues_t * vals)
 			{
 				vals->motor_status = IDLE;
 			}
-			controller(vals->i8_throttle_cmd, vals->f32_motor_current,&vals->u8_duty_cycle,vals->ctrl_type); //negative throttle cmd
+			//transition 13, GEAR
+			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
+			{
+				vals->motor_status = ENGAGE;
+			}
+			vals->ctrl_type = save_ctrl_type ;
+			controller(vals); //negative throttle cmd
 		break;
 		
 		case ERR:
+			//transition 4
 			if (!b_major_fault && vals->u8_motor_temp < MAX_TEMP)
 			{
-				//transition 4
 				vals->motor_status = IDLE;
 			}
 			drivers(0);//drivers shutdown
 			vals->b_driver_status = 0;
+			vals->gear_required = NEUTRAL;
 			reset_I(); //reset integrator
 			vals->i8_throttle_cmd = 0;
-			vals->u8_duty_cycle = 50 ;
+			vals->u8_duty_cycle = 50;
 		break;	
 	}
 	

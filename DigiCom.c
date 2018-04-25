@@ -84,12 +84,13 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 
 				if (rx->data.u8[3] > 10 && (vals->motor_status == IDLE || vals->motor_status == ACCEL))
 				{
-					vals->i8_throttle_cmd = rx->data.u8[3]/10.0 ;
+					vals->i8_throttle_cmd = rx->data.u8[3]/15 ; //max = 6A, optimal current
+					
 				}
 				
 				if (rx->data.u8[2] > 25 && (vals->motor_status == IDLE || vals->motor_status == BRAKE))
 				{
-					vals->i8_throttle_cmd = -rx->data.u8[2]/20.0 ;
+					vals->i8_throttle_cmd = -rx->data.u8[2]/15 ; //max = 6A, optimal current
 				}
 				
 				if (rx->data.u8[2] <= 25 && rx->data.u8[3] <= 10)
@@ -98,27 +99,39 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 				}
 				
 			break;
+			
+			case E_CLUTCH_CAN_ID :
+				vals->gear_status = rx->data.u8[0] //receiving gear status from the clutch
+			break;
 		}
 	}
 }
 
 //sending
-void handle_motor_status_can_msg(uint8_t *send, ModuleValues_t *vals){
+void handle_motor_status_can_msg(ModuleValues_t vals){
 	
 	txFrame.id = MOTOR_CAN_ID;
 	txFrame.length = 8;
 	
-	if(*send){
-		txFrame.data.u8[0] = vals->motor_status;
-		txFrame.data.u8[1] = vals->u8_duty_cycle;
-		txFrame.data.u16[1] = (uint16_t)(vals->f32_motor_current);
-		txFrame.data.u16[2] = (uint16_t)(vals->f32_energy*1000) ;
-		txFrame.data.u16[3] = vals->u8_car_speed ;
-		//add motor temp
+	txFrame.data.u8[0] = vals.motor_status;
+	txFrame.data.u8[1] = vals.u8_duty_cycle;
+	txFrame.data.u16[1] = (uint16_t)(vals.f32_motor_current);
+	txFrame.data.u16[2] = (uint16_t)(vals.f32_energy*1000) ;
+	txFrame.data.u16[3] = vals.u8_car_speed/10 ; //real part
+	txFrame.data.u16[4] = vals.u8_car_speed-(vals.u8_car_speed/10)*10 ; //decimal part
+	//add motor temp
 		
-		can_send_message(&txFrame);
-		*send = 0;
-	}
+	can_send_message(&txFrame);
+}
+
+void handle_clutch_cmd_can_msg(ModuleValues_t vals){
+	
+	txFrame.id = MOTOR_CL_CMD_CAN_ID;
+	txFrame.length = 1;
+
+	txFrame.data.u8[0] = vals.gear_required;
+		
+	can_send_message(&txFrame);
 }
 
 ///////////////////  UART  ////////////////////

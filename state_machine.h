@@ -16,8 +16,9 @@ typedef enum {
 	OFF = 0, // power or CAN disconnected
 	ACCEL = 1, //receiving ACCEL cmd
 	BRAKE = 2, //Receiving BRAKE cmd
-	IDLE = 3, //receiving 0 current cmd (car rolling, current law is running with 0A cmd
+	IDLE = 3, //receiving 0 current cmd (car rolling, current loop is running with 0A cmd
 	ERR = 4, //error mode
+	ENGAGE = 5 //waiting for the clutch to engage
 } MotorControllerState_t;
 
 typedef enum
@@ -32,6 +33,12 @@ typedef enum
 	GEAR1 = 1,
 	GEAR2 = 2
 } ClutchState_t ;
+
+typedef enum
+{
+	BELT,
+	GEAR
+}PowertrainType_t;
 
 typedef enum
 {
@@ -51,11 +58,12 @@ typedef struct{
 	uint16_t u16_watchdog ;
 	MotorControllerState_t motor_status; // [||||||statebit2|statebit1]
 	MsgMode_t message_mode;
-	ClutchState_t clutch;
-	ClutchState_t clutch_required;
+	ClutchState_t gear_status;
+	ClutchState_t gear_required;
 	uint8_t b_driver_status;
 	ControlType_t ctrl_type;
 	uint8_t b_send_uart_data;
+	PowertrainType_t pwtrain_type;
 
 }ModuleValues_t;
 

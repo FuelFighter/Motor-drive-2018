@@ -72,12 +72,13 @@ ModuleValues_t ComValues = {
 	.u8_duty_cycle = 50,
 	.u16_watchdog = 0,
 	.motor_status = OFF,
-	.clutch = NEUTRAL,
-	.clutch_required = NEUTRAL,
+	.gear_status = NEUTRAL,
+	.gear_required = NEUTRAL,
 	.b_driver_status = 0,
 	.ctrl_type = CURRENT,
 	.message_mode = CAN,
-	.b_send_uart_data = 0
+	.b_send_uart_data = 0,
+	.pwtrain_type = BELT
 };
 
 int main(void)	
@@ -108,7 +109,9 @@ int main(void)
 		
 		if (b_send_can)
 		{
-			handle_motor_status_can_msg(&b_send_can, &ComValues); //send CAN
+			handle_motor_status_can_msg(&ComValues); //send motor status on CAN
+			handle_clutch_cmd_can_msg(&ComValues); // send clutch command on CAN
+			b_send_can = 0;
 		}
 		
 		if (b_send_uart)

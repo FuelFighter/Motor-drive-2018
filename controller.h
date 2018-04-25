@@ -14,7 +14,8 @@
 #include "state_machine.h"
 
 void reset_I(void) ;
-void controller(float f32_current_cmd, float f32_prev_current, uint8_t *u8_duty,ControlType_t ctrlType);
+void set_I(uint8_t duty) ;
+void controller(ModuleValues_t vals);
 void drivers(uint8_t b_state);
 void drivers_init();
 #endif /* CONTROLLER_H_ */
