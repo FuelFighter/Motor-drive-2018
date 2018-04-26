@@ -80,17 +80,18 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 				
 				vals->message_mode = CAN ;
 				vals->ctrl_type = CURRENT ;
-				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ; // resetting to max value each time a message is received.
+				vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ; // resetting to max value each time a message is received.
 
 				if (rx->data.u8[3] > 10 && (vals->motor_status == IDLE || vals->motor_status == ACCEL))
 				{
-					vals->i8_throttle_cmd = rx->data.u8[3]/15 ; //max = 6A, optimal current
-					
+					vals->i8_throttle_cmd = rx->data.u8[3]/10 ; 
+					vals->u16_watchdog_throttle = WATCHDOG_THROTTLE_RELOAD_VALUE ;
 				}
 				
 				if (rx->data.u8[2] > 25 && (vals->motor_status == IDLE || vals->motor_status == BRAKE))
 				{
-					vals->i8_throttle_cmd = -rx->data.u8[2]/15 ; //max = 6A, optimal current
+					vals->i8_throttle_cmd = -rx->data.u8[2]/10 ;
+					vals->u16_watchdog_throttle = WATCHDOG_THROTTLE_RELOAD_VALUE ;
 				}
 				
 				if (rx->data.u8[2] <= 25 && rx->data.u8[3] <= 10)
@@ -153,7 +154,7 @@ void receive_uart(ModuleValues_t * vals)
 				vals->ctrl_type = CURRENT;
 				printf("\nCURRENT control mode activated.\n");
 				vals->b_send_uart_data = 1;
-				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
+				vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ;
 			}
 			
 			if (i16_data_received == 12)
@@ -161,12 +162,12 @@ void receive_uart(ModuleValues_t * vals)
 				vals->ctrl_type = PWM;
 				printf("\nPWM control mode activated.\n");
 				vals->b_send_uart_data = 1;
-				vals->u16_watchdog = WATCHDOG_RELOAD_VALUE ;
+				vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ;
 			}
 			
 			if (i16_data_received == 13)
 			{
-				vals->u16_watchdog = 0;
+				vals->u16_watchdog_can = 0;
 				printf("\nTurning off.\n");
 				printf("Drivers deactivated.\n");
 				vals->b_send_uart_data = 0;

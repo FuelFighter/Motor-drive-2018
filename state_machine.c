@@ -32,7 +32,7 @@ void state_handler(ModuleValues_t * vals)
 	{
 		case OFF:
 			//transition 1
-			if (vals->u16_watchdog > 0 && b_board_powered)
+			if (vals->u16_watchdog_can > 0 && b_board_powered)
 			{
 				vals->motor_status = IDLE;
 			}
@@ -98,7 +98,7 @@ void state_handler(ModuleValues_t * vals)
 				vals->motor_status = BRAKE;
 			}
 			//transition 11, GEAR
-			if (vals->i8_throttle_cmd == 0)
+			if (vals->i8_throttle_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
 				vals->motor_status = IDLE;
 			}
@@ -106,7 +106,7 @@ void state_handler(ModuleValues_t * vals)
 		
 		case ACCEL:
 			//transition 6
-			if (vals->i8_throttle_cmd == 0)
+			if (vals->i8_throttle_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
 				vals->motor_status = IDLE;
 			}
@@ -121,7 +121,7 @@ void state_handler(ModuleValues_t * vals)
 		
 		case BRAKE:
 			//transition 8
-			if (vals->i8_throttle_cmd == 0)
+			if (vals->i8_throttle_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
 				vals->motor_status = IDLE;
 			}
@@ -149,7 +149,7 @@ void state_handler(ModuleValues_t * vals)
 		break;	
 	}
 	
-	if ((vals->motor_status == IDLE || vals->motor_status == ACCEL || vals->motor_status == BRAKE) && (vals->u16_watchdog == 0 || !b_board_powered))
+	if ((vals->motor_status == IDLE || vals->motor_status == ACCEL || vals->motor_status == BRAKE || vals->motor_status == ENGAGE) && (vals->u16_watchdog_can == 0 || !b_board_powered))
 	{
 		// transition 2
 		vals->motor_status = OFF;

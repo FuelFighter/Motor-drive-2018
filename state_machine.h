@@ -9,7 +9,8 @@
 #ifndef STATE_MACHINE_H_
 #define STATE_MACHINE_H_
 
-#define WATCHDOG_RELOAD_VALUE 200
+#define WATCHDOG_CAN_RELOAD_VALUE 200
+#define WATCHDOG_THROTTLE_RELOAD_VALUE 200
 
 //////////////  TYPES  ///////////////
 typedef enum {
@@ -55,7 +56,8 @@ typedef struct{
 	uint8_t u8_car_speed;
 	int8_t i8_throttle_cmd;
 	uint8_t u8_duty_cycle ;
-	uint16_t u16_watchdog ;
+	uint16_t u16_watchdog_can ;
+	uint16_t u16_watchdog_throttle ;
 	MotorControllerState_t motor_status; // [||||||statebit2|statebit1]
 	MsgMode_t message_mode;
 	ClutchState_t gear_status;

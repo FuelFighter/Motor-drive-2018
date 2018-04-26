@@ -5,7 +5,31 @@
  * Author : Tanguy Simon for DNV GL Fuel fighter
  * Corresponding Hardware : Motor Drive V2.0
  */ 
-//CLKI/O 8MHz
+////////////////  TODO  ////////////
+/*
+* watchdog for throttle release before disengaging
+* Gear2 ? /!\ reverse motion
+*
+*
+*
+*
+*/
+////////////////  DESCRIPTION  ////////////
+/* The motorcontroller has CAN interface with the dashboard and the electrical clutch
+* It has a UART interface with a computer (serialPlot, arduino IDE, Atmel studio serial interface and Simulink)
+* There are two modules in the car (1 & 2) with their corresponding clutch. (choose this in motor_controller_selectrion.h)
+* It can be controlled in PWM (only through UART) or Current
+* It can control the belt powertrain (default) or the Gear powertrain (upon reception of clutch CAN message)
+* The main only has timer definition and systic handlers.
+* The SPI, UART, CAN communication and state LEDs are managed in DigiCom.c
+* controller.c manages the modulator and current loop
+* the sensors.c manages conversions from the current, voltage and temperature sensors.
+* state_machine.c manages the different states of the motorcontroller, the inter-state transitions and actions during each state.
+* speed.c is dedicated to the speed counter (reed switch with magnets on the wheel) and Synchronous speed duty cycle to engage the gears.
+
+*/
+
+//CLKI/O = 8MHz
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -70,7 +94,8 @@ ModuleValues_t ComValues = {
 	.u8_car_speed = 0,
 	.i8_throttle_cmd = 0, //in amps
 	.u8_duty_cycle = 50,
-	.u16_watchdog = 0,
+	.u16_watchdog_can = 0,
+	.u16_watchdog_throttle = 0,
 	.motor_status = OFF,
 	.gear_status = NEUTRAL,
 	.gear_required = NEUTRAL,
@@ -128,9 +153,17 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	if (systic_counter_fast == 1) // every 10ms
 	{
 		b_send_uart = 1;
-		if (ComValues.u16_watchdog != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
+		if (ComValues.u16_watchdog_can != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
 		{
-			ComValues.u16_watchdog -- ;
+			ComValues.u16_watchdog_can -- ;
+		}
+		
+		if (ComValues.u16_watchdog_throttle != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
+		{
+			ComValues.u16_watchdog_throttle -- ;
+		}else if (ComValues.message_mode == UART)
+		{
+			ComValues.u16_watchdog_throttle = 0 ;
 		}
 		
 		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;		
