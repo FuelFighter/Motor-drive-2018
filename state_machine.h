@@ -53,7 +53,7 @@ typedef struct{
 	float f32_batt_volt;
 	float f32_energy ;
 	uint8_t u8_motor_temp;
-	uint8_t u8_car_speed;
+	uint16_t u16_car_speed;
 	int8_t i8_throttle_cmd;
 	uint8_t u8_duty_cycle ;
 	uint16_t u16_watchdog_can ;

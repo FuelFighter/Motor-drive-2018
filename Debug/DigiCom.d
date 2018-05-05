@@ -16,7 +16,7 @@ DigiCom.d DigiCom.o: .././DigiCom.c \
  .././DigiCom.h .././motor_controller_selection.h \
  .././UniversalModuleDrivers/can.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h \
- .././sensors.h .././controller.h .././pid.h \
+ .././state_machine.h .././sensors.h .././controller.h .././pid.h \
  .././UniversalModuleDrivers/usbdb.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h \
@@ -59,6 +59,8 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 .././UniversalModuleDrivers/can.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h:
+
+.././state_machine.h:
 
 .././sensors.h:
 

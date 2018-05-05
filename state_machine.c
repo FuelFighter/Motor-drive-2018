@@ -82,7 +82,7 @@ void state_handler(ModuleValues_t * vals)
 		case ENGAGE: // /!\ TODO : with the two gears, all turning motion has to be inverted for the inner gear.
 			drivers(1);
 			vals->gear_required = GEAR1;
-			vals->u8_duty_cycle = compute_synch_duty(vals->u8_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
+			vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
 			set_I(vals->u8_duty_cycle) ; //set integrator
 			save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
 			vals->ctrl_type = PWM ;
@@ -105,6 +105,11 @@ void state_handler(ModuleValues_t * vals)
 		break;
 		
 		case ACCEL:
+			//if deadman released before throttle
+			if (vals->u16_watchdog_can <= WATCHDOG_CAN_RELOAD_VALUE - 50)
+			{
+				vals->i8_throttle_cmd = 0;
+			}
 			//transition 6
 			if (vals->i8_throttle_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
@@ -125,6 +130,11 @@ void state_handler(ModuleValues_t * vals)
 		break;
 		
 		case BRAKE:
+			//if deadman released before throttle
+			if (vals->u16_watchdog_can <= WATCHDOG_CAN_RELOAD_VALUE - 50)
+			{
+				vals->i8_throttle_cmd = 0;
+			}
 			//transition 8
 			if (vals->i8_throttle_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{

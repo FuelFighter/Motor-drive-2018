@@ -91,7 +91,7 @@ ModuleValues_t ComValues = {
 	.f32_batt_volt = 0.0,
 	.f32_energy = 0.0,
 	.u8_motor_temp = 0,
-	.u8_car_speed = 0,
+	.u16_car_speed = 0,
 	.i8_throttle_cmd = 0, //in amps
 	.u8_duty_cycle = 50,
 	.u16_watchdog_can = 0,
@@ -124,7 +124,7 @@ int main(void)
 	stdout = &uart0_io; // attach uart stream to stdout & stdin
 	stdin = &uart0_io; // uart0_in and uart0_out are only available if NO_USART_RX or NO_USART_TX is defined
 	drivers_init();
-	
+	drivers(0);
 	sei();
 	
     while (1){
@@ -175,7 +175,6 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	if (systic_counter_slow == 100) // every 0.5s 
 	{
 		b_send_can = 1;
-		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 500.0);
 		manage_LEDs(ComValues); //UM LED according to motor state
 		systic_counter_slow = 0;
 		} else {
@@ -195,6 +194,15 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 
 
 ISR(TIMER1_COMPA_vect){// every 1ms
+	
+	if (u16_speed_count < 65530 )
+	{
+		u16_speed_count ++ ;
+	} else
+	{
+		ComValues.u16_car_speed = 0;
+		u16_speed_count = 0;
+	}
 	
 	if (u8_SPI_count == 4)
 	{
@@ -233,5 +241,5 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 
 ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
 {
-	u16_speed_count ++ ;
+	handle_speed_sensor(&ComValues.u16_car_speed, &u16_speed_count);
 }

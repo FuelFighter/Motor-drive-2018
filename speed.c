@@ -11,9 +11,9 @@
 #include <avr/interrupt.h>
 
 #define N_MAG 1.0
-#define D_WHEEL 500.0 // in mm, TO BE DETERMINED
+#define D_WHEEL 556.0 // in mm
 #define PI 3.14
-#define COUNT_TO_DISTANCE D_WHEEL*PI/N_MAG
+#define DISTANCE D_WHEEL*PI/N_MAG
 #define LOWPASS_CONSTANT_S 0.1
 #define GEAR_RATIO_1 1
 #define GEAR_RATIO_2 1
@@ -31,11 +31,12 @@ void speed_init()
 	EIMSK |= (1<<INT5) ; // interrupt enable
 }
 
-void handle_speed_sensor(uint8_t *u8_speed,uint16_t *u16_counter, uint16_t u16_period) // period in ms
+void handle_speed_sensor(uint16_t *u16_speed, uint16_t *u16_counter) // period in ms
 {
-	volatile uint8_t u8_new_speed = (uint8_t)(((float)*u16_counter)*D_WHEEL*PI/N_MAG/u16_period); // speed calculated in mm/ms
+	//volatile uint8_t u8_new_speed = (uint8_t)(DISTANCE/(*u16_counter); // speed calculated in mm/ms
 	//*u8_speed = (*u8_speed)*(1-LOWPASS_CONSTANT_S) + LOWPASS_CONSTANT_S*u8_new_speed ;// low pass filter
-	*u8_speed = u8_new_speed ;
+	*u16_speed = (uint16_t)(17458.0/((float)*u16_counter)); // speed calculated in mm/ms ;
+	//printf("%u,%u\n",*u16_counter,*u16_speed);
 	*u16_counter = 0 ;
 }
 

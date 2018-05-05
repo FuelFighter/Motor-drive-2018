@@ -42,6 +42,7 @@ C_SRCS +=  \
 ../controller.c \
 ../DigiCom.c \
 ../speed.c \
+../state_machine.c \
 ../UniversalModuleDrivers/pwm.c \
 ../usart.c \
 ../main.c \
@@ -66,6 +67,7 @@ OBJS +=  \
 controller.o \
 DigiCom.o \
 speed.o \
+state_machine.o \
 pwm.o \
 usart.o \
 main.o \
@@ -83,6 +85,7 @@ OBJS_AS_ARGS +=  \
 controller.o \
 DigiCom.o \
 speed.o \
+state_machine.o \
 pwm.o \
 usart.o \
 main.o \
@@ -100,6 +103,7 @@ C_DEPS +=  \
 controller.d \
 DigiCom.d \
 speed.d \
+state_machine.d \
 pwm.d \
 usart.d \
 main.d \
@@ -117,6 +121,7 @@ C_DEPS_AS_ARGS +=  \
 controller.d \
 DigiCom.d \
 speed.d \
+state_machine.d \
 pwm.d \
 usart.d \
 main.d \
@@ -144,6 +149,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

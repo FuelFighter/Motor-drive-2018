@@ -116,12 +116,11 @@ void handle_motor_status_can_msg(ModuleValues_t vals){
 	txFrame.length = 8;
 	
 	txFrame.data.u8[0] = vals.motor_status;
-	txFrame.data.u8[1] = vals.u8_duty_cycle;
-	txFrame.data.u16[1] = (uint16_t)(vals.f32_motor_current);
-	txFrame.data.u16[2] = (uint16_t)(vals.f32_energy*1000) ;
-	txFrame.data.u16[3] = vals.u8_car_speed*36 ; //100 = 10.0km/h
-	//txFrame.data.u16[4] = vals.u8_car_speed-(vals.u8_car_speed/10)*10 ; //decimal part
-	//add motor temp
+	txFrame.data.i8[1] = (int8_t)(vals.f32_motor_current*10);
+	txFrame.data.u16[1] = (uint16_t)(vals.f32_batt_volt*10);
+	txFrame.data.u16[2] = (uint16_t)(vals.f32_energy/100.0) ;
+	txFrame.data.u8[6] = (vals.u16_car_speed*3.6) ; //sent in km/h
+	txFrame.data.u8[7] = vals.u8_motor_temp;
 		
 	can_send_message(&txFrame);
 }
@@ -139,88 +138,23 @@ void handle_clutch_cmd_can_msg(ModuleValues_t vals){
 ///////////////////  UART  ////////////////////
 
 //receiving 
-uint8_t u8_uart_welcome = 0;
 void receive_uart(ModuleValues_t * vals)
 {
 	if(uart_AvailableBytes()!=0){
+		vals->message_mode = UART ;
+		volatile int16_t i16_data_received=uart_getint();
+		uart_flush();
 		
-		if (u8_uart_welcome == 2 && vals->message_mode == UART)
+		if (vals->ctrl_type == CURRENT)
 		{
-			volatile int16_t i16_data_received=uart_getint();
-			uart_flush();
-			
-			if (i16_data_received == 11)
+			if (i16_data_received > -10 && i16_data_received < 10) //limited braking and acceleration at 10A
 			{
-				vals->ctrl_type = CURRENT;
-				printf("\nCURRENT control mode activated.\n");
-				vals->b_send_uart_data = 1;
-				vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ;
+				vals->i8_throttle_cmd = i16_data_received ;
 			}
-			
-			if (i16_data_received == 12)
-			{
-				vals->ctrl_type = PWM;
-				printf("\nPWM control mode activated.\n");
-				vals->b_send_uart_data = 1;
-				vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ;
-			}
-			
-			if (i16_data_received == 13)
-			{
-				vals->u16_watchdog_can = 0;
-				printf("\nTurning off.\n");
-				printf("Drivers deactivated.\n");
-				vals->b_send_uart_data = 0;
-			}
-			
-			if (vals->ctrl_type == CURRENT)
-			{
-				if (i16_data_received > -10 && i16_data_received < 10) //limited braking and acceleration at 10A
-				{
-					vals->i8_throttle_cmd = i16_data_received ;
-				}
 				
-			}else if (vals->ctrl_type == PWM)
-			{
-				vals->u8_duty_cycle = i16_data_received;
-			}
-		}
-		
-		if (u8_uart_welcome == 1)
+		}else if (vals->ctrl_type == PWM)
 		{
-			volatile int16_t i16_choice_received=uart_getint();
-			uart_flush();
-			if (i16_choice_received == 1)
-			{//can ctrl
-				printf("\n CAN control mode. sending data.\n");
-				vals->b_send_uart_data = 1;
-				u8_uart_welcome = 2;
-			}
-			if (i16_choice_received == 2)
-			{//uart ctrl
-				vals->message_mode = UART ;
-				u8_uart_welcome = 2;
-				printf("UART message mode activated.\n\n");
-				
-				printf("for CURRENT control mode, write: 11, followed by a space\n");
-				printf("for PWM control mode, write:     12, followed by a space\n");
-				printf("to turn OFF, write:              13, followed by a space\n\n");
-				
-				printf("In CURRENT, for acceleration or braking, write the number of Amps (integers, [-10 10]), followed by a space\n\n");
-				
-				printf("In PWM, write the duty cycle (integers, [5 95]), followed by a space\n");
-			}
-		}
-		
-		if (u8_uart_welcome == 0)
-		{
-			//first uart cmd received
-			printf("Welcome to the UART interface of motor drive v2.1.\n");
-			printf("To use the CAN bus as control medium, type: 1 followed by a space.\n");
-			printf("To use the UART as control medium, type:    2 followed by a space.\n");
-			volatile int16_t useless=uart_getint();
-			uart_flush();
-			u8_uart_welcome = 1;
+			vals->u8_duty_cycle = i16_data_received;
 		}
 	}
 }
