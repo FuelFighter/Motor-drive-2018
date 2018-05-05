@@ -9,7 +9,7 @@
 #include "UniversalModuleDrivers/usbdb.h"
 #include "UniversalModuleDrivers/adc.h"
 #include "UniversalModuleDrivers/pwm.h"
-#include "motor_controller_selection.h"
+#include "state_machine.h"
 #include "pid.h"
 #include "controller.h"
 
@@ -42,25 +42,30 @@ static float f32_Integrator = 0.0 ;
 static float f32_DutyCycleCmd = 50.0 ;
 float f32_CurrentDelta = 0.0 ;
 
-static bool b_saturation = false;
+static uint8_t b_saturation = 0;
 
 void reset_I(void)
 {
 	f32_Integrator = 0;
 }
 
-void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty, ControlType_t ctrlType){
+void set_I(uint8_t duty)
+{
+	f32_Integrator = duty;
+}
 
-	if (ctrlType == CURRENT)
+void controller(ModuleValues_t *vals){
+
+	if (vals->ctrl_type == CURRENT)
 	{
 		if (f32_DutyCycleCmd >= 95 || f32_DutyCycleCmd <= 50)
 		{
-			b_saturation = true ;
+			b_saturation = 1 ;
 			} else {
-			b_saturation = false;
+			b_saturation = 0;
 		}
 		
-		f32_CurrentDelta = (f32_current_cmd-f32_prev_current)	;
+		f32_CurrentDelta = ((float)(vals->i8_throttle_cmd)-vals->f32_motor_current)	;
 		
 		if (!b_saturation) // prevents over integration of an error that cannot be dealt with (because the duty cycle reaches a limit) integral windup protection
 		{
@@ -70,9 +75,9 @@ void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty
 		f32_DutyCycleCmd=Kp*f32_CurrentDelta+f32_Integrator*Ki ;
 		f32_DutyCycleCmd=f32_DutyCycleCmd+50.0 ;
 	
-	}else if (ctrlType == PWM)
+	}else if (vals->ctrl_type == PWM)
 	{
-		f32_DutyCycleCmd = (float)*u8_duty;
+		f32_DutyCycleCmd = (float)(vals->u8_duty_cycle);
 	}
 	
 	
@@ -96,7 +101,7 @@ void controller(float f32_current_cmd, float f32_prev_current, uint8_t * u8_duty
 		OCR3B = (int)(ICR3-(f32_DutyCycleCmd/100.0)*ICR3) ; //PWM_PE4
 	}
 	
-	*u8_duty = (uint16_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
+	vals->u8_duty_cycle = (uint16_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
 }
 
 void drivers_init() // defining pin PB4 as logical output
@@ -111,47 +116,5 @@ void drivers(uint8_t b_state) //when pin PB4 is high : drivers are shut down, wh
 		PORTB |= (1 << PB4) ;
 	}else{
 		PORTB &= ~(1 << PB4) ;
-	}
-}
-
-void manage_motor(ModuleValues_t * vals)
-{
-	switch(vals->motor_status)
-	{
-		case BRAKE :
-			drivers(1); //drivers turn on
-			vals->b_driver_status = 1;
-			controller(-vals->u8_throttle_cmd, vals->f32_motor_current,&vals->u8_duty_cycle,vals->ctrl_type); //negative throttle cmd
-		break;
-		
-		case ACCEL :
-			drivers(1); //drivers turn on
-			vals->b_driver_status = 1;
-			controller(vals->u8_throttle_cmd, vals->f32_motor_current, &vals->u8_duty_cycle,vals->ctrl_type);
-		break;
-		
-		case IDLE :
-			drivers(1); //drivers turn on
-			vals->b_driver_status = 1;
-			vals->u8_throttle_cmd = 0;
-			controller(0, vals->f32_motor_current, &vals->u8_duty_cycle,vals->ctrl_type); //current law running with 0 torque 
-			//(integrator naturally following the speed of the car as it decreases, to prevent a big step at the next acceleration.)
-		break;
-		
-		case OFF : // drivers disabled
-			drivers(0);//drivers shutdown
-			vals->b_driver_status = 0;
-			reset_I(); //reset integrator
-			vals->u8_throttle_cmd = 0;
-			vals->u8_duty_cycle = 50;
-		break;
-		
-		case ERR :
-			drivers(0);//drivers shutdown
-			vals->b_driver_status = 0;
-			reset_I(); //reset integrator
-			vals->u8_throttle_cmd = 0;
-			vals->u8_duty_cycle = 50 ;
-		break;
 	}
 }
