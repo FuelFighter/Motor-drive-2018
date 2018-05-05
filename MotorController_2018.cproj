@@ -168,6 +168,12 @@
     <Compile Include="speed.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="state_machine.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="state_machine.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="UniversalModuleDrivers\pwm.c">
       <SubType>compile</SubType>
       <Link>pwm.c</Link>

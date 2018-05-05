@@ -8,6 +8,8 @@ DigiCom.c
 
 speed.c
 
+state_machine.c
+
 UniversalModuleDrivers\pwm.c
 
 usart.c

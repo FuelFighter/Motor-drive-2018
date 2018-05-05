@@ -7,11 +7,14 @@
  */ 
 
 #include <avr/io.h>
+#include "state_machine.h"
+
 #ifndef SPEED_H_
 #define SPEED_H_
 
 
 void speed_init();
 void handle_speed_sensor(uint8_t * u8_speed, uint16_t *u16_counter, uint16_t u16_period); // period in ms
+uint8_t compute_synch_duty(uint8_t speed_ms, ClutchState_t gear, float vbatt);
 
 #endif /* SPEED_H_ */
