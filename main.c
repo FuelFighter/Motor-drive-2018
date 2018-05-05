@@ -5,7 +5,31 @@
  * Author : Tanguy Simon for DNV GL Fuel fighter
  * Corresponding Hardware : Motor Drive V2.0
  */ 
-//CLKI/O 8MHz
+////////////////  TODO  ////////////
+/*
+* watchdog for throttle release before disengaging
+* Gear2 ? /!\ reverse motion
+*
+*
+*
+*
+*/
+////////////////  DESCRIPTION  ////////////
+/* The motorcontroller has CAN interface with the dashboard and the electrical clutch
+* It has a UART interface with a computer (serialPlot, arduino IDE, Atmel studio serial interface and Simulink)
+* There are two modules in the car (1 & 2) with their corresponding clutch. (choose this in motor_controller_selectrion.h)
+* It can be controlled in PWM (only through UART) or Current
+* It can control the belt powertrain (default) or the Gear powertrain (upon reception of clutch CAN message)
+* The main only has timer definition and systic handlers.
+* The SPI, UART, CAN communication and state LEDs are managed in DigiCom.c
+* controller.c manages the modulator and current loop
+* the sensors.c manages conversions from the current, voltage and temperature sensors.
+* state_machine.c manages the different states of the motorcontroller, the inter-state transitions and actions during each state.
+* speed.c is dedicated to the speed counter (reed switch with magnets on the wheel) and Synchronous speed duty cycle to engage the gears.
+
+*/
+
+//CLKI/O = 8MHz
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -23,7 +47,7 @@
 #include "UniversalModuleDrivers/can.h"
 #include "UniversalModuleDrivers/adc.h"
 #include "UniversalModuleDrivers/uart.h"
-#include "motor_controller_selection.h"
+#include "state_machine.h"
 #include "AVR-UART-lib-master/usart.h"
 
 #define USE_USART0
@@ -33,7 +57,7 @@ static uint8_t systic_counter_fast = 0;
 static uint16_t systic_counter_slow = 0;
 
 //for CAN
-static uint8_t send_can = 0;
+static uint8_t b_send_can = 0;
 
 //for UART
 uint8_t b_send_uart = 0;
@@ -58,7 +82,7 @@ void timer0_init_ts(){
 	TCCR0A |= (1<<WGM01); //CTC
 	TCNT0 = 0; //reset timer value
 	TIMSK0 |= (1<<OCIE0A); //enable interrupt
-	OCR0A = 39; //compare value // 78 for 10ms, 39 for 5ms
+	OCR0A = 39; //compare value // 78 for 10ms, 39 for 5ms, 19 for 2.56ms
 } // => reload time timer 0 = 10ms
 
 ModuleValues_t ComValues = {
@@ -68,14 +92,18 @@ ModuleValues_t ComValues = {
 	.f32_energy = 0.0,
 	.u8_motor_temp = 0,
 	.u8_car_speed = 0,
-	.u8_throttle_cmd = 0, //in amps
+	.i8_throttle_cmd = 0, //in amps
 	.u8_duty_cycle = 50,
-	.u16_watchdog = WATCHDOG_RELOAD_VALUE,
+	.u16_watchdog_can = 0,
+	.u16_watchdog_throttle = 0,
 	.motor_status = OFF,
-	.clutch = NEUTRAL,
-	.clutch_required = NEUTRAL,
+	.gear_status = NEUTRAL,
+	.gear_required = NEUTRAL,
 	.b_driver_status = 0,
-	.ctrl_type = CURRENT
+	.ctrl_type = CURRENT,
+	.message_mode = CAN,
+	.b_send_uart_data = 0,
+	.pwtrain_type = BELT
 };
 
 int main(void)	
@@ -101,17 +129,21 @@ int main(void)
 	
     while (1){
 		
-		handle_motor_status_can_msg(&send_can, &ComValues); //send CAN
 		handle_can(&ComValues, &rxFrame); //receive CAN
+		receive_uart(&ComValues);
+		
+		if (b_send_can)
+		{
+			handle_motor_status_can_msg(ComValues); //send motor status on CAN
+			handle_clutch_cmd_can_msg(ComValues); // send clutch command on CAN
+			b_send_can = 0;
+		}
 		
 		if (b_send_uart)
 		{
 			send_uart(ComValues);
 			b_send_uart = 0;
 		}
-		receive_uart(&ComValues);
-		
-		err_check(&ComValues); //verifying current, temperature and voltage
 	}
 }
 
@@ -121,15 +153,19 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	if (systic_counter_fast == 1) // every 10ms
 	{
 		b_send_uart = 1;
-		if (ComValues.u16_watchdog == 0)
+		if (ComValues.u16_watchdog_can != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
 		{
-			if (ComValues.motor_status != ERR)
-			{
-				ComValues.motor_status = OFF ;
-			}
-			}else{
-			ComValues.u16_watchdog -- ;
+			ComValues.u16_watchdog_can -- ;
 		}
+		
+		if (ComValues.u16_watchdog_throttle != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
+		{
+			ComValues.u16_watchdog_throttle -- ;
+		}else if (ComValues.message_mode == UART)
+		{
+			ComValues.u16_watchdog_throttle = 0 ;
+		}
+		
 		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;		
 		systic_counter_fast = 0;
 	} else {
@@ -138,15 +174,14 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	
 	if (systic_counter_slow == 100) // every 0.5s 
 	{
-		send_can = 1;
+		b_send_can = 1;
 		handle_speed_sensor(&ComValues.u8_car_speed, &u16_speed_count, 500.0);
 		manage_LEDs(ComValues); //UM LED according to motor state
 		systic_counter_slow = 0;
 		} else {
 		systic_counter_slow ++;
 	}
-	
-	manage_motor(&ComValues);
+	state_handler(&ComValues);
 }
 
 
@@ -196,7 +231,7 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 }
 
 
-ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in frot of the reed switch)
+ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
 {
 	u16_speed_count ++ ;
 }
