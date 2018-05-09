@@ -14,7 +14,7 @@
 
 
 void speed_init();
-void handle_speed_sensor(uint16_t * u16_speed, uint16_t *u16_counter); //speed in m/s
-uint8_t compute_synch_duty(uint8_t speed_ms, ClutchState_t gear, float vbatt);
+void handle_speed_sensor(volatile uint16_t *u16_speed, volatile uint16_t *u16_counter); //speed in m/s
+uint8_t compute_synch_duty(volatile uint8_t speed_ms, ClutchState_t gear, float vbatt);
 
 #endif /* SPEED_H_ */

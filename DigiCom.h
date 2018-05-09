@@ -18,26 +18,28 @@
 // CAN Types
 CanMessage_t rxFrame;
 CanMessage_t txFrame;
+CanMessage_t rxFrame1;
+CanMessage_t txFrame1;
 
 ///////////////// PROTOTYPES //////////////s
 
 //SPI
-void SPI_handler_0(float * f32_motcurrent); // motor current
-void SPI_handler_1(float * f32_batcurrent); // battery current
-void SPI_handler_2(float * f32_batvolt); //battery voltage
-void SPI_handler_4(uint8_t * u8_mottemp); //motor temperature
+void SPI_handler_0(volatile float * f32_motcurrent); // motor current
+void SPI_handler_1(volatile float * f32_batcurrent); // battery current
+void SPI_handler_2(volatile float * f32_batvolt); //battery voltage
+void SPI_handler_4(volatile uint8_t * u8_mottemp); //motor temperature
 
 //CAN
-void handle_motor_status_can_msg(ModuleValues_t vals); //sending status
-void handle_clutch_cmd_can_msg(ModuleValues_t vals); //sending required gear to clutch
-void handle_can(ModuleValues_t *vals, CanMessage_t *rx); //receiving
+void handle_motor_status_can_msg(volatile ModuleValues_t vals); //sending status
+void handle_clutch_cmd_can_msg(volatile ModuleValues_t vals); //sending required gear to clutch
+void handle_can(volatile ModuleValues_t *vals, CanMessage_t *rx); //receiving
 
 //UART
-void receive_uart(ModuleValues_t * vals);
-void send_uart(ModuleValues_t vals);
+void receive_uart(volatile ModuleValues_t * vals);
+void send_uart(volatile ModuleValues_t vals);
 
 //LEDs
-void manage_LEDs(ModuleValues_t vals);
+void manage_LEDs(volatile ModuleValues_t vals);
 
 
 #endif /* DIGICOM_H_ */

@@ -28,17 +28,17 @@ static uint8_t u8_rxBuffer[3];
 
 /////////////////////////  SPI  /////////////////////////
 
-void SPI_handler_0(float * f32_motcurrent) // motor current
+void SPI_handler_0(volatile float * p_f32_motcurrent) // motor current
 {
 	Set_ADC_Channel_ext(0, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
 	u8_rxBuffer[1]&= ~(0b111<<5);
 	u16_ADC0_reg = (u8_rxBuffer[1] << 8 ) | u8_rxBuffer[2];
 	
-	handle_current_sensor(f32_motcurrent, u16_ADC0_reg,0);
+	handle_current_sensor(p_f32_motcurrent, u16_ADC0_reg,0);
 }
 
-void SPI_handler_1(float * f32_batcurrent) // battery current
+void SPI_handler_1(volatile float * f32_batcurrent) // battery current
 {
 	Set_ADC_Channel_ext(1, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
@@ -48,7 +48,7 @@ void SPI_handler_1(float * f32_batcurrent) // battery current
 	handle_current_sensor(f32_batcurrent, u16_ADC1_reg,1);
 }
 
-void SPI_handler_2(float * f32_batvolt) //battery voltage
+void SPI_handler_2(volatile float * f32_batvolt) //battery voltage
 {
 	Set_ADC_Channel_ext(2, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
@@ -58,7 +58,7 @@ void SPI_handler_2(float * f32_batvolt) //battery voltage
 	*f32_batvolt = (float)u16_ADC2_reg/66.1 -0.37; // *5/4096 (12bit ADC with Vref = 5V) *0.1 (divider bridge 50V -> 5V) *coeff - offset(trimming)
 }
 
-void SPI_handler_4(uint8_t * u8_mottemp) //motor temperature
+void SPI_handler_4(volatile uint8_t * u8_mottemp) //motor temperature
 {
 	Set_ADC_Channel_ext(4, u8_txBuffer);
 	spi_trancieve(u8_txBuffer, u8_rxBuffer, 3, 1);
@@ -73,7 +73,7 @@ void SPI_handler_4(uint8_t * u8_mottemp) //motor temperature
 
 
 //receiving
-void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
+void handle_can(volatile ModuleValues_t *vals, CanMessage_t *rx){
 	if (can_read_message_if_new(rx) && vals->motor_status != ERR){
 		switch (rx->id){
 			case DASHBOARD_CAN_ID	: //receiving can messages from the steering wheel
@@ -82,35 +82,39 @@ void handle_can(ModuleValues_t *vals, CanMessage_t *rx){
 				vals->ctrl_type = CURRENT ;
 				vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ; // resetting to max value each time a message is received.
 
-				if (rx->data.u8[3] > 10 && (vals->motor_status == IDLE || vals->motor_status == ACCEL))
+				if (rx->data.u8[3] > 10)
 				{
-					vals->i8_throttle_cmd = rx->data.u8[3]/10 ; 
+					vals->u8_accel_cmd = rx->data.u8[3]/10 ; 
 					vals->u16_watchdog_throttle = WATCHDOG_THROTTLE_RELOAD_VALUE ;
 				}
 				
-				if (rx->data.u8[2] > 25 && (vals->motor_status == IDLE || vals->motor_status == BRAKE))
+				if (rx->data.u8[2] > 25)
 				{
-					vals->i8_throttle_cmd = -rx->data.u8[2]/10 ;
+					vals->u8_brake_cmd = rx->data.u8[2]/10 ;
 					vals->u16_watchdog_throttle = WATCHDOG_THROTTLE_RELOAD_VALUE ;
 				}
 				
-				if (rx->data.u8[2] <= 25 && rx->data.u8[3] <= 10)
+				if (rx->data.u8[2] <= 25)
 				{
-					vals->i8_throttle_cmd = 0;
+					vals->u8_brake_cmd = 0;
+				}
+				if (rx->data.u8[3] <= 10)
+				{
+					vals->u8_accel_cmd = 0;
 				}
 				
 			break;
 			
 			case E_CLUTCH_CAN_ID :
 				vals->pwtrain_type = GEAR ;
-				vals->gear_status = rx->data.u8[0] ; //receiving gear status from the clutch
+				vals->gear_status = rx->data.u8[2] ; //receiving gear status from the clutch
 			break;
 		}
 	}
 }
 
 //sending
-void handle_motor_status_can_msg(ModuleValues_t vals){
+void handle_motor_status_can_msg(volatile ModuleValues_t vals){
 	
 	txFrame.id = MOTOR_CAN_ID;
 	txFrame.length = 8;
@@ -119,37 +123,41 @@ void handle_motor_status_can_msg(ModuleValues_t vals){
 	txFrame.data.i8[1] = (int8_t)(vals.f32_motor_current*10);
 	txFrame.data.u16[1] = (uint16_t)(vals.f32_batt_volt*10);
 	txFrame.data.u16[2] = (uint16_t)(vals.f32_energy/100.0) ;
-	txFrame.data.u8[6] = (vals.u16_car_speed*3.6) ; //sent in km/h
+	txFrame.data.u8[6] = (uint8_t)(vals.u16_car_speed*3.6) ; //sent in km/h
 	txFrame.data.u8[7] = vals.u8_motor_temp;
 		
 	can_send_message(&txFrame);
 }
 
-void handle_clutch_cmd_can_msg(ModuleValues_t vals){
+void handle_clutch_cmd_can_msg(volatile ModuleValues_t vals){
 	
-	txFrame.id = MOTOR_CL_CMD_CAN_ID;
-	txFrame.length = 1;
+	txFrame1.id = MOTOR_CL_CMD_CAN_ID;
+	txFrame1.length = 1;
 
-	txFrame.data.u8[0] = vals.gear_required;
+	txFrame1.data.u8[0] = vals.gear_required;
 		
-	can_send_message(&txFrame);
+	can_send_message(&txFrame1);
 }
 
 ///////////////////  UART  ////////////////////
 
 //receiving 
-void receive_uart(ModuleValues_t * vals)
+void receive_uart(volatile ModuleValues_t * vals)
 {
 	if(uart_AvailableBytes()!=0){
 		vals->message_mode = UART ;
-		volatile int16_t i16_data_received=uart_getint();
+		int16_t i16_data_received=uart_getint();
 		uart_flush();
-		
+		vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ;
 		if (vals->ctrl_type == CURRENT)
 		{
-			if (i16_data_received > -10 && i16_data_received < 10) //limited braking and acceleration at 10A
+			if (i16_data_received > -10 && i16_data_received < 0) //limited braking and acceleration at 10A
 			{
-				vals->i8_throttle_cmd = i16_data_received ;
+				vals->u8_brake_cmd = -i16_data_received ;
+			}
+			if (i16_data_received > 0 && i16_data_received < 10) //limited braking and acceleration at 10A
+			{
+				vals->u8_accel_cmd = i16_data_received ;
 			}
 				
 		}else if (vals->ctrl_type == PWM)
@@ -161,26 +169,39 @@ void receive_uart(ModuleValues_t * vals)
 
 //sending
 //sends motor current and current cmd through USB
-void send_uart(ModuleValues_t vals)
+void send_uart(volatile ModuleValues_t vals)
 {
-	if (vals.b_send_uart_data)
+	//printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.i8_throttle_cmd);
+	printf("\r\n");
+	printf("batt curr : %i",(int16_t)(vals.f32_batt_current*10));
+	printf(",");
+	printf(" batt volt : %u",(uint16_t)(vals.f32_batt_volt*10));
+	printf(",");
+	printf(" mot curr : %i",(int16_t)(vals.f32_motor_current*10));
+	printf(",");
+	printf(" duty : %u",vals.u8_duty_cycle);
+	printf(",");
+	if (vals.u8_accel_cmd > 0)
 	{
-		//printf("%i,%i,%u,%u,%u,%u,%i",(int16_t)(vals.f32_motor_current*1000),(int16_t)(vals.f32_batt_current*1000),(uint16_t)(vals.f32_batt_volt*1000),vals.u8_car_speed,vals.u8_duty_cycle,vals.u8_motor_temp,vals.i8_throttle_cmd);
-		printf("%i",(int16_t)(vals.f32_batt_current*1000));
-		printf(",");
-		printf("%u",(uint16_t)(vals.f32_batt_volt*1000));
-		printf(",");
-		printf("%i",(int16_t)(vals.f32_motor_current*1000));
-		printf(",");
-		printf("%u",vals.u8_duty_cycle);
-		printf(",");
-		printf("%i",vals.i8_throttle_cmd);
-		printf("\n");
+		printf(" cmd : %u",vals.u8_accel_cmd);
+	}else
+	{
+		printf(" cmd : %i",-(int8_t)vals.u8_brake_cmd);
 	}
+	printf(",");
+	printf("speed km/h : %u",(uint16_t)(vals.u16_car_speed*3.6));
+	printf(",");
+	printf(" gear req : %u",vals.gear_required);
+	printf(",");
+	printf(" gear status : %u",vals.gear_status);
+	printf(",");
+	printf(" ctrl mode (0:Cur, 1:PWM) : %u",vals.ctrl_type);
+	printf(",");
+	printf(" motor mode : %u",vals.motor_status);
 }
 
 ///////////////// LED /////////////////////
-void manage_LEDs(ModuleValues_t vals)
+void manage_LEDs(volatile ModuleValues_t vals)
 {	
 	switch (vals.motor_status)
 	{

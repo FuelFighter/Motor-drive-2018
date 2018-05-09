@@ -11,13 +11,13 @@
 
 #define TRANSDUCER_SENSIBILITY 0.0416
 #define TRANSDUCER_OFFSET 2.52
-#define CORRECTION_OFFSET_BAT 0.98
-#define CORRECTION_OFFSET_MOT 1.25
+#define CORRECTION_OFFSET_BAT 0.2
+#define CORRECTION_OFFSET_MOT 0.2
 #define LOWPASS_CONSTANT 0.1
 
-void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num)
+void handle_current_sensor(volatile float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num)
 {
-	volatile float f_new_current = ((((float)u16_ADC_reg*5/4096) - TRANSDUCER_OFFSET)/TRANSDUCER_SENSIBILITY) ;// /3 because current passes 3x in transducer for more precision.
+	volatile float f_new_current = ((((volatile float)u16_ADC_reg*5.0/4096.0) - TRANSDUCER_OFFSET)/TRANSDUCER_SENSIBILITY) ;// /3 because current passes 3x in transducer for more precision.
 	if (u8_sensor_num)
 	{//batt
 		f_new_current = (f_new_current+CORRECTION_OFFSET_BAT);// correction of offset
@@ -28,9 +28,9 @@ void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_
 	*f32_current = (*f32_current)*(1-LOWPASS_CONSTANT) + LOWPASS_CONSTANT*f_new_current ;// low pass filter ---------------------TODO test
 }
 
-void handle_temp_sensor(uint8_t *u8_temp, uint16_t u16_ADC_reg)
+void handle_temp_sensor(volatile uint8_t *u8_temp, uint16_t u16_ADC_reg)
 {
-	volatile float f_sens_volt = ((float)u16_ADC_reg*5/4096);
+	float f_sens_volt = ((float)u16_ADC_reg*5.0/4096.0);
 	//Thermistors NTC 495-75654-ND
 	// give temp by three linear approxiations : 
 	// 0 -> 3.7V => T = 20*V-22
@@ -41,7 +41,7 @@ void handle_temp_sensor(uint8_t *u8_temp, uint16_t u16_ADC_reg)
 	
 	if (f_sens_volt <= 3.7)
 	{
-		*u8_temp = (uint8_t)(20*f_sens_volt-22);
+		*u8_temp = (uint8_t)(20.0*f_sens_volt-22.0);
 	}
 	
 	if (f_sens_volt <= 4.7 && f_sens_volt > 3.7)
@@ -51,11 +51,11 @@ void handle_temp_sensor(uint8_t *u8_temp, uint16_t u16_ADC_reg)
 	
 	if (f_sens_volt > 4.7)
 	{
-		*u8_temp = (uint8_t)(200*f_sens_volt-840);
+		*u8_temp = (uint8_t)(200.0*f_sens_volt-840.0);
 	}
 }
 
-void handle_joulemeter(float *f32_energy, float f32_bat_current, float f32_bat_voltage, uint8_t u8_time_period) //units : A, V, ms
+void handle_joulemeter(volatile float *f32_energy, volatile float f32_bat_current, volatile float f32_bat_voltage, uint8_t u8_time_period) //units : A, V, ms
 {
 	*f32_energy += f32_bat_voltage*f32_bat_current*(float)u8_time_period/1000 ;
 }

@@ -9,8 +9,8 @@
 #ifndef STATE_MACHINE_H_
 #define STATE_MACHINE_H_
 
-#define WATCHDOG_CAN_RELOAD_VALUE 200
-#define WATCHDOG_THROTTLE_RELOAD_VALUE 200
+#define WATCHDOG_CAN_RELOAD_VALUE 25
+#define WATCHDOG_THROTTLE_RELOAD_VALUE 13
 
 //////////////  TYPES  ///////////////
 typedef enum {
@@ -43,8 +43,8 @@ typedef enum
 
 typedef enum
 {
-	CURRENT,
-	PWM
+	CURRENT = 0,
+	PWM = 1
 } ControlType_t ;
 
 typedef struct{
@@ -54,7 +54,8 @@ typedef struct{
 	float f32_energy ;
 	uint8_t u8_motor_temp;
 	uint16_t u16_car_speed;
-	int8_t i8_throttle_cmd;
+	uint8_t u8_accel_cmd;
+	uint8_t u8_brake_cmd;
 	uint8_t u8_duty_cycle ;
 	uint16_t u16_watchdog_can ;
 	uint16_t u16_watchdog_throttle ;
@@ -64,12 +65,11 @@ typedef struct{
 	ClutchState_t gear_required;
 	uint8_t b_driver_status;
 	ControlType_t ctrl_type;
-	uint8_t b_send_uart_data;
 	PowertrainType_t pwtrain_type;
 
 }ModuleValues_t;
 
 ////////////////  PROTOTYPES   /////////////////
-void state_handler(ModuleValues_t * vals);
+void state_handler(volatile ModuleValues_t * vals);
 
 #endif /* STATE_MACHINE_H_ */

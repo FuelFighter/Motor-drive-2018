@@ -37,12 +37,7 @@ const float Kp=L*2300.0 ; //1500*L
 const float Ki=R*100.0 ; //100*R
 const float TimeStep = 0.01 ; //10ms (see timer 0 in main.c)
 
-
 static float f32_Integrator = 0.0 ;
-static float f32_DutyCycleCmd = 50.0 ;
-float f32_CurrentDelta = 0.0 ;
-
-static uint8_t b_saturation = 0;
 
 void reset_I(void)
 {
@@ -51,21 +46,35 @@ void reset_I(void)
 
 void set_I(uint8_t duty)
 {
-	f32_Integrator = duty;
+	f32_Integrator = (duty-50.0)/Ki;
 }
 
-void controller(ModuleValues_t *vals){
-
+void controller(volatile ModuleValues_t *vals){
+	
+	static float f32_DutyCycleCmd = 50.0 ;
+	float f32_CurrentDelta = 0.0 ;
+	static uint8_t b_saturation = 0;
+	int8_t i8_throttle_cmd = 0;
+	
+	if (vals->motor_status == BRAKE)
+	{
+		i8_throttle_cmd = -(int8_t)vals->u8_brake_cmd ;
+	}
+	if (vals->motor_status == ACCEL)
+	{
+		i8_throttle_cmd = vals->u8_accel_cmd ;
+	}
+	
 	if (vals->ctrl_type == CURRENT)
 	{
 		if (f32_DutyCycleCmd >= 95 || f32_DutyCycleCmd <= 50)
 		{
 			b_saturation = 1 ;
-			} else {
+		} else {
 			b_saturation = 0;
 		}
 		
-		f32_CurrentDelta = ((float)(vals->i8_throttle_cmd)-vals->f32_motor_current)	;
+		f32_CurrentDelta = ((float)(i8_throttle_cmd)-vals->f32_motor_current)	;
 		
 		if (!b_saturation) // prevents over integration of an error that cannot be dealt with (because the duty cycle reaches a limit) integral windup protection
 		{
@@ -78,6 +87,10 @@ void controller(ModuleValues_t *vals){
 	}else if (vals->ctrl_type == PWM)
 	{
 		f32_DutyCycleCmd = (float)(vals->u8_duty_cycle);
+		if (vals->f32_motor_current > 0.5)
+		{
+			f32_DutyCycleCmd -- ;
+		}
 	}
 	
 	
@@ -101,7 +114,7 @@ void controller(ModuleValues_t *vals){
 		OCR3B = (int)(ICR3-(f32_DutyCycleCmd/100.0)*ICR3) ; //PWM_PE4
 	}
 	
-	vals->u8_duty_cycle = (uint16_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
+	vals->u8_duty_cycle = (uint8_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
 }
 
 void drivers_init() // defining pin PB4 as logical output
@@ -111,7 +124,7 @@ void drivers_init() // defining pin PB4 as logical output
 
 void drivers(uint8_t b_state) //when pin PB4 is high : drivers are shut down, when pin is low, drivers are ON (inverted logic) IR2104SPbF drivers
 {
-	if (b_state)
+	if (b_state == 1)
 	{
 		PORTB |= (1 << PB4) ;
 	}else{

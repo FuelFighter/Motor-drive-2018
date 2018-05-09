@@ -7,7 +7,6 @@
  */ 
 ////////////////  TODO  ////////////
 /*
-* watchdog for throttle release before disengaging
 * Gear2 ? /!\ reverse motion
 *
 *
@@ -53,20 +52,21 @@
 #define USE_USART0
 
 //counters for manual prescalers
-static uint8_t systic_counter_fast = 0;
-static uint16_t systic_counter_slow = 0;
+uint8_t systic_counter_fast = 0;
+uint16_t systic_counter_slow = 0;
 
 //for CAN
-static uint8_t b_send_can = 0;
+uint8_t b_send_can = 0;
+uint8_t b_select_can_msg = 0;
 
 //for UART
 uint8_t b_send_uart = 0;
 
 //for SPI
-static uint8_t u8_SPI_count = 0; 
+uint8_t u8_SPI_count = 0; 
 
 //for speed
-static uint16_t u16_speed_count = 0;
+volatile uint16_t u16_speed_count = 0;
 
 
 void timer1_init_ts(){
@@ -85,24 +85,24 @@ void timer0_init_ts(){
 	OCR0A = 39; //compare value // 78 for 10ms, 39 for 5ms, 19 for 2.56ms
 } // => reload time timer 0 = 10ms
 
-ModuleValues_t ComValues = {
+volatile ModuleValues_t ComValues = {
 	.f32_motor_current = 0.0,
 	.f32_batt_current = 0.0,
 	.f32_batt_volt = 0.0,
 	.f32_energy = 0.0,
 	.u8_motor_temp = 0,
 	.u16_car_speed = 0,
-	.i8_throttle_cmd = 0, //in amps
+	.u8_accel_cmd = 0, //in amps
+	.u8_brake_cmd = 0, //in amps
 	.u8_duty_cycle = 50,
 	.u16_watchdog_can = 0,
 	.u16_watchdog_throttle = 0,
 	.motor_status = OFF,
+	.message_mode = CAN,
 	.gear_status = NEUTRAL,
 	.gear_required = NEUTRAL,
 	.b_driver_status = 0,
 	.ctrl_type = CURRENT,
-	.message_mode = CAN,
-	.b_send_uart_data = 0,
 	.pwtrain_type = BELT
 };
 
@@ -130,12 +130,18 @@ int main(void)
     while (1){
 		
 		handle_can(&ComValues, &rxFrame); //receive CAN
-		receive_uart(&ComValues);
+		//receive_uart(&ComValues);
 		
 		if (b_send_can)
 		{
-			handle_motor_status_can_msg(ComValues); //send motor status on CAN
-			handle_clutch_cmd_can_msg(ComValues); // send clutch command on CAN
+			if (b_select_can_msg)// sending one or the other
+			{
+				handle_motor_status_can_msg(ComValues); //send motor status on CAN
+				b_select_can_msg = 1;
+			}else{
+				handle_clutch_cmd_can_msg(ComValues); // send clutch command on CAN
+				b_select_can_msg = 0;
+			}
 			b_send_can = 0;
 		}
 		
@@ -150,8 +156,10 @@ int main(void)
 
 ISR(TIMER0_COMP_vect){ // every 5ms
 	
-	if (systic_counter_fast == 1) // every 10ms
+	if (systic_counter_fast == 7) // every 41ms
 	{
+		state_handler(&ComValues);
+		b_send_can = 1;
 		b_send_uart = 1;
 		if (ComValues.u16_watchdog_can != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
 		{
@@ -166,7 +174,7 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 			ComValues.u16_watchdog_throttle = 0 ;
 		}
 		
-		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 10) ;		
+		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 41) ;		
 		systic_counter_fast = 0;
 	} else {
 		systic_counter_fast ++;
@@ -174,13 +182,11 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 	
 	if (systic_counter_slow == 100) // every 0.5s 
 	{
-		b_send_can = 1;
 		manage_LEDs(ComValues); //UM LED according to motor state
 		systic_counter_slow = 0;
 		} else {
 		systic_counter_slow ++;
 	}
-	state_handler(&ComValues);
 }
 
 
@@ -195,7 +201,7 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 
 ISR(TIMER1_COMPA_vect){// every 1ms
 	
-	if (u16_speed_count < 65530 )
+	if (u16_speed_count < 3000 ) //after 5s with no magnet, speed = 0
 	{
 		u16_speed_count ++ ;
 	} else
@@ -239,7 +245,8 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 }
 
 
-ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
+ISR(INT0_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
 {
 	handle_speed_sensor(&ComValues.u16_car_speed, &u16_speed_count);
+	
 }

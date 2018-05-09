@@ -12,8 +12,8 @@
 #ifndef SENSORS_H_
 #define SENSORS_H_
 
-void handle_current_sensor(float *f32_current, uint16_t u16_ADC_reg,uint8_t u8_sensor_num);
-void handle_temp_sensor(uint8_t *u8_temp, uint16_t u16_ADC_reg);
-void handle_joulemeter(float *f32_energy, float f32_bat_current, float f32_bat_voltage, uint8_t u8_time_period);
+void handle_current_sensor(volatile float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num);
+void handle_temp_sensor(volatile uint8_t *u8_temp, uint16_t u16_ADC_reg);
+void handle_joulemeter(volatile float *f32_energy,volatile float f32_bat_current,volatile float f32_bat_voltage,volatile uint8_t u8_time_period);
 
 #endif /* SENSORS_H_ */
