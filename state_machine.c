@@ -18,16 +18,31 @@
 
 static uint8_t b_major_fault = 0;
 static ControlType_t save_ctrl_type ;
+static uint8_t fault_count = 0;
+static uint16_t fault_timeout = 0;
+static uint8_t fault_clear_count = 0;
 
 void state_handler(volatile ModuleValues_t * vals)
 {
 	uint8_t b_board_powered = (vals->f32_batt_volt >= MIN_VOLT  && vals->f32_batt_volt < 100.0);
 	
-	if (b_board_powered && (vals->f32_motor_current >= MAX_AMP || vals->f32_batt_volt > MAX_VOLT))
+	if (b_board_powered && (vals->f32_motor_current >= MAX_AMP|| vals->f32_motor_current <= -MAX_AMP || vals->f32_batt_volt > MAX_VOLT))
 	{
-		b_major_fault = 1;
+		fault_count ++ ;
+		if (fault_count == 3)
+		{
+			b_major_fault = 1;
+			fault_timeout = 600 ;
+			fault_clear_count ++;
+		}
 	}
-	
+	if (fault_timeout > 0)
+	{
+		fault_timeout -- ;
+	}else if(b_major_fault && fault_clear_count < 3){
+		b_major_fault = 0;
+	}
+
 	switch(vals->motor_status)
 	{
 		case OFF:
@@ -69,13 +84,14 @@ void state_handler(volatile ModuleValues_t * vals)
 			if (vals->pwtrain_type == GEAR)
 			{
 				//transition 5
-				if (vals->u8_accel_cmd > 0 || vals->u8_brake_cmd > 0)
+				if ((vals->u8_accel_cmd > 0 || vals->u8_brake_cmd > 0) && vals->gear_status == NEUTRAL)
 				{
 					vals->motor_status = ENGAGE;
 				}
 				drivers(0); //disable
 				vals->gear_required = NEUTRAL ;
 				reset_I();
+				vals->u8_duty_cycle = 50 ;
 			}
 			
 		break;

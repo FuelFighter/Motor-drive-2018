@@ -11,7 +11,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define N_MAG 4.0
+#define N_MAG 2.0
 #define D_WHEEL 0.556 // in m
 #define PI 3.14
 #define DISTANCE D_WHEEL*PI/N_MAG
@@ -19,7 +19,7 @@
 #define GEAR_RATIO_1 12.5 //300/24
 #define GEAR_RATIO_2 1
 #define VOLT_SPEED_CST 102.0 //rmp/V
-#define DUTY_CALC1 (6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
+#define DUTY_CALC1 (0.85*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 #define DUTY_CALC2 (6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 
 const float f32_speed_ratio = (17458.0/N_MAG);
@@ -50,7 +50,7 @@ void handle_speed_sensor(volatile uint16_t *u16_speed, volatile uint16_t *u16_co
 	//static uint8_t u8_array_pointer_old = 0;
 	//static uint8_t u8_array_pointer_new = 1;
 	
-	if (*u16_counter > 100)
+	if (*u16_counter > 5)
 	{
 		/*u16_speed_array[u8_array_pointer_new] = (uint16_t)(f32_speed_ratio/((float)*u16_counter)); // speed calculated in mm/ms 
 		*u16_speed = 0;
@@ -86,6 +86,10 @@ uint8_t compute_synch_duty(volatile uint8_t speed_10ms, ClutchState_t gear, floa
 	if (gear == GEAR2)
 	{
 		Duty = (speed_10ms*DUTY_CALC2/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5	
+	}
+	if (Duty == 50)
+	{
+		Duty = 51 ;
 	}
 	return Duty ;
 }

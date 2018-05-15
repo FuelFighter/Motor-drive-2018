@@ -92,6 +92,7 @@ volatile ModuleValues_t ComValues = {
 	.f32_energy = 0.0,
 	.u8_motor_temp = 0,
 	.u16_car_speed = 0,
+	.u16_motor_speed = 0,
 	.u8_accel_cmd = 0, //in amps
 	.u8_brake_cmd = 0, //in amps
 	.u8_duty_cycle = 50,
@@ -103,7 +104,7 @@ volatile ModuleValues_t ComValues = {
 	.gear_required = NEUTRAL,
 	.b_driver_status = 0,
 	.ctrl_type = CURRENT,
-	.pwtrain_type = BELT
+	.pwtrain_type = GEAR
 };
 
 int main(void)	
@@ -155,10 +156,9 @@ int main(void)
 
 
 ISR(TIMER0_COMP_vect){ // every 5ms
-	
+	state_handler(&ComValues);
 	if (systic_counter_fast == 7) // every 41ms
 	{
-		state_handler(&ComValues);
 		b_send_can = 1;
 		b_send_uart = 1;
 		if (ComValues.u16_watchdog_can != 0 && ComValues.message_mode == CAN) //if in uart ctrl mode (see Digicom.h), the watchdog is not used
@@ -171,7 +171,7 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 			ComValues.u16_watchdog_throttle -- ;
 		}else if (ComValues.message_mode == UART)
 		{
-			ComValues.u16_watchdog_throttle = 0 ;
+			ComValues.u16_watchdog_throttle = 0;
 		}
 		
 		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 41) ;		
@@ -201,7 +201,7 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 
 ISR(TIMER1_COMPA_vect){// every 1ms
 	
-	if (u16_speed_count < 3000 ) //after 5s with no magnet, speed = 0
+	if (u16_speed_count < 3000 ) //after 3s with no magnet, speed = 0
 	{
 		u16_speed_count ++ ;
 	} else
@@ -210,16 +210,11 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 		u16_speed_count = 0;
 	}
 	
-	if (u8_SPI_count == 4)
+	if (u8_SPI_count == 3)
 	{
 		//motor temp
 		SPI_handler_4(&ComValues.u8_motor_temp);
 		u8_SPI_count = 0 ;
-	}
-	
-	if (u8_SPI_count == 3)
-	{
-		u8_SPI_count ++ ;
 	}
 	
 	if (u8_SPI_count == 2)
@@ -248,5 +243,4 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 ISR(INT0_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
 {
 	handle_speed_sensor(&ComValues.u16_car_speed, &u16_speed_count);
-	
 }

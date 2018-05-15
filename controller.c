@@ -30,12 +30,14 @@
 
 //200W motor
 #define V_BATT 50.0
-#define R 0.608
-#define L 0.000423
+#define R 0.244
+#define L 0.000177
+//48V : R=0.608, L=0.000423
+//36V : R=0.244, L=0.000177
 
-const float Kp=L*2300.0 ; //1500*L
+const float Kp=L*2300.0 ; //1500*L 2300*L
 const float Ki=R*100.0 ; //100*R
-const float TimeStep = 0.01 ; //10ms (see timer 0 in main.c)
+const float TimeStep = 0.005 ; //5ms (see timer 0 in main.c)
 
 static float f32_Integrator = 0.0 ;
 
@@ -89,7 +91,11 @@ void controller(volatile ModuleValues_t *vals){
 		f32_DutyCycleCmd = (float)(vals->u8_duty_cycle);
 		if (vals->f32_motor_current > 0.5)
 		{
-			f32_DutyCycleCmd -- ;
+			//f32_DutyCycleCmd -- ;
+		}
+		if (vals->f32_motor_current < -0.5)
+		{
+			//f32_DutyCycleCmd ++ ;
 		}
 	}
 	
@@ -115,6 +121,7 @@ void controller(volatile ModuleValues_t *vals){
 	}
 	
 	vals->u8_duty_cycle = (uint8_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
+
 }
 
 void drivers_init() // defining pin PB4 as logical output
