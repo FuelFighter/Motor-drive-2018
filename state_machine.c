@@ -66,19 +66,26 @@ void state_handler(volatile ModuleValues_t * vals)
 		
 			if (vals->pwtrain_type == BELT)
 			{
+				drivers(0); //disable
+				reset_I();
+				vals->u8_duty_cycle = 50 ;
+				
 				//transition 7
 				if (vals->u8_brake_cmd > 0)
 				{
+					drivers(1);
+					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = BRAKE;
 				}
 				//transition 5
 				if (vals->u8_accel_cmd > 0)
 				{
+					drivers(1);
+					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = ACCEL;
 				}
-				drivers(1);//drivers enable
-				controller(vals); //current loop running with 0 torque
-				//(integrator naturally following the speed of the car as it decreases, to prevent a big step at the next acceleration.)
 			}
 			
 			if (vals->pwtrain_type == GEAR)
@@ -125,7 +132,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			//if deadman released before throttle
 			if (vals->u16_watchdog_can <= WATCHDOG_CAN_RELOAD_VALUE - 10)
 			{
-				vals->u8_accel_cmd = 0;// goes here
+				vals->u8_accel_cmd = 0;
 			}
 			
 			//vals->ctrl_type = save_ctrl_type ;
@@ -140,12 +147,12 @@ void state_handler(volatile ModuleValues_t * vals)
 			//transition 12, GEAR
 			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
 			{
-				vals->motor_status = ENGAGE;//goes here
+				vals->motor_status = ENGAGE;
 			}
 			//transition 14, GEAR
 			if (vals->pwtrain_type == GEAR && vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0)
 			{
-				vals->motor_status = BRAKE;//goes here
+				vals->motor_status = BRAKE;
 			}
 		break;
 		

@@ -104,7 +104,7 @@ volatile ModuleValues_t ComValues = {
 	.gear_required = NEUTRAL,
 	.b_driver_status = 0,
 	.ctrl_type = CURRENT,
-	.pwtrain_type = GEAR
+	.pwtrain_type = BELT
 };
 
 int main(void)	
@@ -138,10 +138,10 @@ int main(void)
 			if (b_select_can_msg)// sending one or the other
 			{
 				handle_motor_status_can_msg(ComValues); //send motor status on CAN
-				b_select_can_msg = 1;
+				b_select_can_msg = 0;
 			}else{
 				handle_clutch_cmd_can_msg(ComValues); // send clutch command on CAN
-				b_select_can_msg = 0;
+				b_select_can_msg = 1;
 			}
 			b_send_can = 0;
 		}

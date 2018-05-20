@@ -32,7 +32,7 @@ typedef enum
 {
 	NEUTRAL = 0,
 	GEAR1 = 1,
-	GEAR2 = 2
+	GEAR2 = 2 //on belt drive
 } ClutchState_t ;
 
 typedef enum

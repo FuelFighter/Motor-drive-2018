@@ -16,11 +16,11 @@
 #define PI 3.14
 #define DISTANCE D_WHEEL*PI/N_MAG
 #define LOWPASS_CONSTANT_S 0.1
-#define GEAR_RATIO_1 12.5 //300/24
-#define GEAR_RATIO_2 1
-#define VOLT_SPEED_CST 102.0 //rmp/V
-#define DUTY_CALC1 (0.85*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
-#define DUTY_CALC2 (6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
+#define GEAR_RATIO_1 16.66 //300/24 = 12.5, 300/18 = 16.66
+#define GEAR_RATIO_2 10
+#define VOLT_SPEED_CST 158.0 //rmp/V 102.0 for 48V 200W, 158.0 for 36V 200W, 77.8 for 48V 250W
+#define DUTY_CALC1 (1.316*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
+#define DUTY_CALC2 (1.316*6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 
 const float f32_speed_ratio = (17458.0/N_MAG);
 
@@ -79,17 +79,17 @@ void handle_speed_sensor(volatile uint16_t *u16_speed, volatile uint16_t *u16_co
 uint8_t compute_synch_duty(volatile uint8_t speed_10ms, ClutchState_t gear, float vbatt) // computing the duty cycle to reach synchronous speed before engaging the gears
 {
 	uint8_t Duty = 50 ;
-	if (gear == GEAR1)
+	if (gear == GEAR1)//gear powertrain
 	{
-		Duty = (speed_10ms*DUTY_CALC1/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5		
+		Duty = (speed_10ms*DUTY_CALC1/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5
+		if (Duty == 50)
+		{
+			Duty = 51 ;
+		}		
 	}
-	if (gear == GEAR2)
+	if (gear == GEAR2)//for belt powertrain
 	{
 		Duty = (speed_10ms*DUTY_CALC2/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5	
-	}
-	if (Duty == 50)
-	{
-		Duty = 51 ;
 	}
 	return Duty ;
 }
