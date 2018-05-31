@@ -1275,9 +1275,9 @@ uint8_t compute_synch_duty(volatile uint8_t speed_10ms, ClutchState_t gear, floa
      8c6:	80 e0       	ldi	r24, 0x00	; 0
      8c8:	90 e0       	ldi	r25, 0x00	; 0
      8ca:	0e 94 b4 0e 	call	0x1d68	; 0x1d68 <__floatsisf>
-     8ce:	24 e4       	ldi	r18, 0x44	; 68
-     8d0:	3b e2       	ldi	r19, 0x2B	; 43
-     8d2:	44 e7       	ldi	r20, 0x74	; 116
+     8ce:	20 e2       	ldi	r18, 0x20	; 32
+     8d0:	35 ea       	ldi	r19, 0xA5	; 165
+     8d2:	47 e6       	ldi	r20, 0x67	; 103
      8d4:	5e e3       	ldi	r21, 0x3E	; 62
      8d6:	0e 94 68 0f 	call	0x1ed0	; 0x1ed0 <__mulsf3>
      8da:	a7 01       	movw	r20, r14
@@ -1314,10 +1314,10 @@ uint8_t compute_synch_duty(volatile uint8_t speed_10ms, ClutchState_t gear, floa
      910:	80 e0       	ldi	r24, 0x00	; 0
      912:	90 e0       	ldi	r25, 0x00	; 0
      914:	0e 94 b4 0e 	call	0x1d68	; 0x1d68 <__floatsisf>
-     918:	2e e5       	ldi	r18, 0x5E	; 94
-     91a:	3f e8       	ldi	r19, 0x8F	; 143
-     91c:	42 e1       	ldi	r20, 0x12	; 18
-     91e:	5e e3       	ldi	r21, 0x3E	; 62
+     918:	21 e5       	ldi	r18, 0x51	; 81
+     91a:	3c eb       	ldi	r19, 0xBC	; 188
+     91c:	4e ed       	ldi	r20, 0xDE	; 222
+     91e:	5d e3       	ldi	r21, 0x3D	; 61
      920:	0e 94 68 0f 	call	0x1ed0	; 0x1ed0 <__mulsf3>
      924:	a7 01       	movw	r20, r14
      926:	96 01       	movw	r18, r12
@@ -3086,9 +3086,9 @@ void handle_current_sensor(volatile float *f32_current, uint16_t u16_ADC_reg, ui
     1392:	40 e8       	ldi	r20, 0x80	; 128
     1394:	59 e3       	ldi	r21, 0x39	; 57
     1396:	9c d5       	rcall	.+2872   	; 0x1ed0 <__mulsf3>
-    1398:	2e ea       	ldi	r18, 0xAE	; 174
-    139a:	37 e4       	ldi	r19, 0x47	; 71
-    139c:	41 e2       	ldi	r20, 0x21	; 33
+    1398:	20 e0       	ldi	r18, 0x00	; 0
+    139a:	30 e0       	ldi	r19, 0x00	; 0
+    139c:	40 e2       	ldi	r20, 0x20	; 32
     139e:	50 e4       	ldi	r21, 0x40	; 64
     13a0:	df d3       	rcall	.+1982   	; 0x1b60 <__subsf3>
     13a2:	23 ec       	ldi	r18, 0xC3	; 195

@@ -73,17 +73,15 @@ void state_handler(volatile ModuleValues_t * vals)
 				//transition 7
 				if (vals->u8_brake_cmd > 0)
 				{
-					drivers(1);
-					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
-					set_I(vals->u8_duty_cycle) ; //set integrator
+					//vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					//set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = BRAKE;
 				}
 				//transition 5
 				if (vals->u8_accel_cmd > 0)
 				{
-					drivers(1);
-					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
-					set_I(vals->u8_duty_cycle) ; //set integrator
+					//vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					//set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = ACCEL;
 				}
 			}
@@ -104,13 +102,13 @@ void state_handler(volatile ModuleValues_t * vals)
 		break;
 		
 		case ENGAGE: // /!\ TODO : with the two gears, all turning motion has to be inverted for the inner gear.
-			drivers(1);
 			vals->gear_required = GEAR1;
 			vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
 			set_I(vals->u8_duty_cycle) ; //set integrator
 			save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
 			vals->ctrl_type = PWM ;
 			controller(vals) ; //speed up motor to synch speed
+			drivers(1);
 			//transition 9, GEAR
 			if (vals->u8_brake_cmd > 0 && vals->gear_status == vals->gear_required && vals->gear_status != NEUTRAL)
 			{
@@ -138,7 +136,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			//vals->ctrl_type = save_ctrl_type ;
 			vals->ctrl_type = CURRENT;
 			controller(vals);
-			
+			drivers(1);
 			//transition 6
 			if (vals->u8_accel_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
@@ -165,6 +163,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			//vals->ctrl_type = save_ctrl_type ;
 			vals->ctrl_type = CURRENT ;
 			controller(vals); //negative throttle cmd
+			drivers(1);
 			//transition 8
 			if (vals->u8_brake_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{

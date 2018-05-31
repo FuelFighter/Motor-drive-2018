@@ -11,9 +11,16 @@
 
 #define TRANSDUCER_SENSIBILITY 0.0416
 #define TRANSDUCER_OFFSET 2.52
-#define CORRECTION_OFFSET_BAT 0.2
+#define CORRECTION_OFFSET_BAT 0.0
 #define CORRECTION_OFFSET_MOT 0.2
 #define LOWPASS_CONSTANT 0.1
+
+// board specific offsets : [BAT, MOT]
+//1 : [-0.2, 0]
+//2 : [0.0,0.2]
+//3 : [0.2,0.05]
+//4 : [,]
+//5 : [,]
 
 void handle_current_sensor(volatile float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num)
 {

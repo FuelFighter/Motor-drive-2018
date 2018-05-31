@@ -26,6 +26,11 @@
 * state_machine.c manages the different states of the motorcontroller, the inter-state transitions and actions during each state.
 * speed.c is dedicated to the speed counter (reed switch with magnets on the wheel) and Synchronous speed duty cycle to engage the gears.
 
+//////////////////////// WHEN PROGRAMMING A UM///////////////
+* The sensors offsets should be changed according to the hardware (sensors.c)
+* the CAN ID should be changed according to the position in the car (MC1 on the right, 2 on the left) (motor_controller_selection)
+* the number of magnets used for the speed should be set, and the sensor type taken into account (rising front interrupt for reed switch sensor, rising and falling for hall effect) (speed.c)
+* the type of motor should be taken into account (R and L in controller.c and speed constant in speed.c)
 */
 
 //CLKI/O = 8MHz
@@ -240,7 +245,7 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 }
 
 
-ISR(INT0_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
+ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
 {
 	handle_speed_sensor(&ComValues.u16_car_speed, &u16_speed_count);
 }

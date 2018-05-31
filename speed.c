@@ -11,31 +11,31 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define N_MAG 2.0
+#define N_MAG 1.0
 #define D_WHEEL 0.556 // in m
 #define PI 3.14
 #define DISTANCE D_WHEEL*PI/N_MAG
 #define LOWPASS_CONSTANT_S 0.1
-#define GEAR_RATIO_1 16.66 //300/24 = 12.5, 300/18 = 16.66
-#define GEAR_RATIO_2 10
-#define VOLT_SPEED_CST 158.0 //rmp/V 102.0 for 48V 200W, 158.0 for 36V 200W, 77.8 for 48V 250W
-#define DUTY_CALC1 (1.316*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
-#define DUTY_CALC2 (1.316*6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
+#define GEAR_RATIO_1 20.8 //300/24 = 12.5, 300/18 = 16.66
+#define GEAR_RATIO_2 12.5 //200/16 = 12.5  (BELT)
+#define VOLT_SPEED_CST 102.0 //rmp/V 102.0 for 48V 200W, 158.0 for 36V 200W, 77.8 for 48V 250W
+#define DUTY_CALC1 (1.08*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
+#define DUTY_CALC2 (0.9*6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 
-const float f32_speed_ratio = (17458.0/N_MAG);
+const float f32_speed_ratio = (17467.0/N_MAG);
 
 static uint16_t u16_speed_array [4];
 
 void speed_init()
 {
 	//pin
-	DDRD &= ~(1<<PD0); //define pin as input
-	PORTD &= ~(1<<PD0); //no pull-up 
+	DDRE &= ~(1<<PE5); //define pin as input
+	PORTE &= ~(1<<PE5); //no pull-up
 	//int
-	EIMSK &= ~(1<<INT0) ; // interrupt disable to prevent interrupt raise during init
-	EICRA |= (1<<ISC00)|(1<<ISC01); // interrupt on rising edge
-	EIFR |= (1<<INTF0) ; // clear flag
-	EIMSK |= (1<<INT0) ; // interrupt enable
+	EIMSK &= ~(1<<INT5) ; // interrupt disable to prevent interrupt raise during init
+	EICRB |= (1<<ISC50)|(1<<ISC51); // interrupt on rising edge
+	EIFR |= (1<<INTF5) ; // clear flag
+	EIMSK |= (1<<INT5) ; // interrupt enable
 	
 	for (int n=0;n<4;n++)
 	{
@@ -43,14 +43,14 @@ void speed_init()
 	}
 }
 
-void handle_speed_sensor(volatile uint16_t *u16_speed, volatile uint16_t *u16_counter) // period in ms
+void handle_speed_sensor(volatile uint16_t *u16_speed, volatile uint16_t *u16_counter) // period in 1ms
 {
 	//uint8_t u8_new_speed = (uint8_t)(DISTANCE/(*u16_counter); // speed calculated in mm/ms
 	//*u8_speed = (*u8_speed)*(1-LOWPASS_CONSTANT_S) + LOWPASS_CONSTANT_S*u8_new_speed ;// low pass filter
 	//static uint8_t u8_array_pointer_old = 0;
 	//static uint8_t u8_array_pointer_new = 1;
 	
-	if (*u16_counter > 5)
+	if (*u16_counter > 6)
 	{
 		/*u16_speed_array[u8_array_pointer_new] = (uint16_t)(f32_speed_ratio/((float)*u16_counter)); // speed calculated in mm/ms 
 		*u16_speed = 0;

@@ -122,8 +122,8 @@ void handle_motor_status_can_msg(volatile ModuleValues_t vals){
 	txFrame.data.u8[0] = vals.motor_status;
 	txFrame.data.i8[1] = (int8_t)(vals.f32_motor_current*10);
 	txFrame.data.u16[1] = (uint16_t)(vals.f32_batt_volt*10);
-	txFrame.data.u16[2] = (uint16_t)(vals.f32_energy/100.0) ;
-	txFrame.data.u8[6] = (uint8_t)(vals.u16_car_speed*3.6) ; //sent in km/h
+	txFrame.data.u16[2] = (uint16_t)abs((int16_t)vals.f32_energy/100.0) ;
+	txFrame.data.u8[6] = (uint8_t)(vals.u16_car_speed*3.6*0.5) ; //sent in km/h
 	txFrame.data.u8[7] = vals.u8_motor_temp;
 		
 	can_send_message(&txFrame);
@@ -201,15 +201,20 @@ void send_uart(volatile ModuleValues_t vals)
 	printf(" motor mode : %u",vals.motor_status);
 	*/
 	
-	printf("%i",(int16_t)(vals.f32_motor_current*100));
+	printf("%i",(int16_t)(vals.f32_motor_current*1000));
 	printf(",");
 	printf("%u",vals.u8_duty_cycle);
 	printf(",");
-	printf("%u",vals.u8_accel_cmd*100);
+	printf("%u",vals.u8_accel_cmd*1000);
 	printf(",");
-	printf("%u",(uint16_t)(vals.u16_car_speed*3.6));
+	printf("%u",(uint16_t)(vals.u16_car_speed*360.0));	// vehicle speed in m/h
 	printf(",");
-	printf("%u",(uint16_t)(vals.u16_motor_speed/4.29));
+	//printf("%u",(uint16_t)(vals.u16_motor_speed/4.29));
+	printf("%u",(uint16_t)(vals.u16_motor_speed*5.03));	// vehicle speed in m/h = rpm*18/375/60*2*pi*0.556/2*3.6
+	printf(",");
+	printf("%u",(uint16_t)(vals.f32_batt_volt*10));
+	printf(",");
+	printf("%i",(int16_t)(vals.f32_batt_current*1000));
 	
 }
 

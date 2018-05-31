@@ -30,8 +30,8 @@
 
 //200W motor
 #define V_BATT 50.0
-#define R 0.244
-#define L 0.000177
+#define R 0.608
+#define L 0.000423
 //48V : R=0.608, L=0.000423
 //36V : R=0.244, L=0.000177
 
