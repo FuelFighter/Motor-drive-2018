@@ -11,14 +11,14 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define N_MAG 1.0
+#define N_MAG 2.0
 #define D_WHEEL 0.556 // in m
 #define PI 3.14
 #define DISTANCE D_WHEEL*PI/N_MAG
 #define LOWPASS_CONSTANT_S 0.1
-#define GEAR_RATIO_1 20.8 //300/24 = 12.5, 300/18 = 16.66
-#define GEAR_RATIO_2 12.5 //200/16 = 12.5  (BELT)
-#define VOLT_SPEED_CST 102.0 //rmp/V 102.0 for 48V 200W, 158.0 for 36V 200W, 77.8 for 48V 250W
+#define GEAR_RATIO_1 20.8 //375/24 = 15.6, 375/18 = 20.8
+#define GEAR_RATIO_2 20.8 //200/16 = 12.5  (BELT)
+#define VOLT_SPEED_CST 158.0 //rmp/V 102.0 for 48V 200W, 158.0 for 36V 200W, 77.8 for 48V 250W
 #define DUTY_CALC1 (1.08*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 #define DUTY_CALC2 (0.9*6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 
@@ -33,7 +33,7 @@ void speed_init()
 	PORTE &= ~(1<<PE5); //no pull-up
 	//int
 	EIMSK &= ~(1<<INT5) ; // interrupt disable to prevent interrupt raise during init
-	EICRB |= (1<<ISC50)|(1<<ISC51); // interrupt on rising edge
+	EICRB |= (1<<ISC50); //|(1<<ISC51); // interrupt on rising edge
 	EIFR |= (1<<INTF5) ; // clear flag
 	EIMSK |= (1<<INT5) ; // interrupt enable
 	
@@ -84,7 +84,7 @@ uint8_t compute_synch_duty(volatile uint8_t speed_10ms, ClutchState_t gear, floa
 		Duty = (speed_10ms*DUTY_CALC1/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5
 		if (Duty == 50)
 		{
-			Duty = 51 ;
+			Duty = 52 ;
 		}		
 	}
 	if (gear == GEAR2)//for belt powertrain

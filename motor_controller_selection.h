@@ -13,8 +13,8 @@
 #include "state_machine.h"
 
 // To choose motor controller, comment out opposite
-#define MOTOR_CONTROLLER_1
-//#define MOTOR_CONTROLLER_2
+//#define MOTOR_CONTROLLER_1
+#define MOTOR_CONTROLLER_2
 /////////////////  for motor  ////////////
 #ifdef MOTOR_CONTROLLER_1
 #define MOTOR_SELECT(for1, for2) (for1)

@@ -9,8 +9,8 @@
 #ifndef STATE_MACHINE_H_
 #define STATE_MACHINE_H_
 
-#define WATCHDOG_CAN_RELOAD_VALUE 25
-#define WATCHDOG_THROTTLE_RELOAD_VALUE 13
+#define WATCHDOG_CAN_RELOAD_VALUE 50
+#define WATCHDOG_THROTTLE_RELOAD_VALUE 30
 
 //////////////  TYPES  ///////////////
 typedef enum {

@@ -66,9 +66,10 @@ void state_handler(volatile ModuleValues_t * vals)
 		
 			if (vals->pwtrain_type == BELT)
 			{
-				drivers(0); //disable
-				reset_I();
-				vals->u8_duty_cycle = 50 ;
+				controller(vals);
+				//drivers(0); //disable
+				//reset_I();
+				//vals->u8_duty_cycle = 50 ;
 				
 				//transition 7
 				if (vals->u8_brake_cmd > 0)
@@ -147,8 +148,8 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = ENGAGE;
 			}
-			//transition 14, GEAR
-			if (vals->pwtrain_type == GEAR && vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0)
+			//transition 14
+			if (vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0)
 			{
 				vals->motor_status = BRAKE;
 			}
@@ -174,8 +175,8 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = ENGAGE;
 			}
-			//transition 15, GEAR
-			if (vals->pwtrain_type == GEAR && vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0)
+			//transition 15
+			if (vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0)
 			{
 				vals->motor_status = ACCEL;
 			}

@@ -9,19 +9,6 @@
 #include "sensors.h"
 #include <avr/io.h>
 
-#define TRANSDUCER_SENSIBILITY 0.0416
-#define TRANSDUCER_OFFSET 2.52
-#define CORRECTION_OFFSET_BAT 0.0
-#define CORRECTION_OFFSET_MOT 0.2
-#define LOWPASS_CONSTANT 0.1
-
-// board specific offsets : [BAT, MOT]
-//1 : [-0.2, 0]
-//2 : [0.0,0.2]
-//3 : [0.2,0.05]
-//4 : [,]
-//5 : [,]
-
 void handle_current_sensor(volatile float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num)
 {
 	volatile float f_new_current = ((((volatile float)u16_ADC_reg*5.0/4096.0) - TRANSDUCER_OFFSET)/TRANSDUCER_SENSIBILITY) ;// /3 because current passes 3x in transducer for more precision.

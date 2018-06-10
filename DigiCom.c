@@ -55,7 +55,7 @@ void SPI_handler_2(volatile float * f32_batvolt) //battery voltage
 	u8_rxBuffer[1]&= ~(0b111<<5);
 	u16_ADC2_reg = (u8_rxBuffer[1] << 8 ) | u8_rxBuffer[2];
 	
-	*f32_batvolt = (float)u16_ADC2_reg/68.5; // *5/4096 (12bit ADC with Vref = 5V) *0.1 (divider bridge 50V -> 5V) *coeff - offset(trimming)
+	*f32_batvolt = VOLT_CONVERSION_OFFSET+(float)u16_ADC2_reg/VOLT_CONVERSION_COEFF;
 }
 
 void SPI_handler_4(volatile uint8_t * u8_mottemp) //motor temperature
