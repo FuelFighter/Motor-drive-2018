@@ -27,14 +27,8 @@
 * speed.c is dedicated to the speed counter (reed switch with magnets on the wheel) and Synchronous speed duty cycle to engage the gears.
 
 //////////////////////// WHEN PROGRAMMING A UM///////////////
-* The sensors offsets and coefficients should be changed according to the hardware (sensors.h)
-* the CAN ID should be changed according to the position in the car (MC1 on the right, 2 on the left) (motor_controller_selection)
-* the number of magnets used for the speed should be set, and the sensor type taken into account (rising front interrupt for reed switch sensor, rising and falling for hall effect) (speed.c)
-* the type of motor should be taken into account (R and L in controller.c and speed constant in speed.c)
+* Look into motor_controller_selection.h and choose the correct defines.
 */
-
-//powertrain left : 10600
-//powertrain right : 10500
 
 //CLKI/O = 8MHz
 

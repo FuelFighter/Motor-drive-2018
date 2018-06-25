@@ -13,28 +13,6 @@
 #include "pid.h"
 #include "controller.h"
 
-#define RPMTO8BIT 0.051
-
-#define TC 94			//Torque constant
-#define SG (0.666)		//Speed/torque gradient
-#define SC 102			//Speed constant
-#define IMAX 20
-#define VCC 50
-#define V2PWM 0xFF/VCC
-//250W motor
-/*
-#define V_BATT 20.0
-#define R 0.365
-#define L 0.000423
-*/
-
-//200W motor
-#define V_BATT 50.0
-#define R 0.244
-#define L 0.000177
-//48V : R=0.608, L=0.000423
-//36V : R=0.244, L=0.000177
-
 const float Kp=L*2300.0 ; //1500*L 2300*L
 const float Ki=R*100.0 ; //100*R
 const float TimeStep = 0.005 ; //5ms (see timer 0 in main.c)
