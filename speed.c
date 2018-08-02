@@ -17,8 +17,8 @@
 #define PI 3.14
 #define DISTANCE D_WHEEL*PI/NUM_MAGNETS
 #define LOWPASS_CONSTANT_S 0.1
-#define GEAR_RATIO_1 20.8 //375/24 = 15.6, 375/18 = 20.8
-#define GEAR_RATIO_2 20.8 //200/16 = 12.5  (BELT mode)
+#define GEAR_RATIO_1 18.75 //375/24 = 15.6, 375/18 = 20.8
+#define GEAR_RATIO_2 18.75 //200/16 = 12.5  (BELT mode)
 #define DUTY_CALC1 (1.08*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 #define DUTY_CALC2 (0.9*6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 
@@ -54,7 +54,7 @@ void speed_init()
 void handle_speed_sensor(volatile uint16_t *u16_speed, volatile uint16_t *u16_counter) // period in 1ms
 {
 	
-	if (*u16_counter > 6)
+	if (*u16_counter > 70)
 	{
 		*u16_speed = (uint16_t)(f32_speed_ratio/((float)*u16_counter));
 		*u16_counter = 0 ;

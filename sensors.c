@@ -8,6 +8,24 @@
 
 #include "sensors.h"
 #include <avr/io.h>
+#include <stdio.h>
+
+void DWC_init()
+{
+	//input digital
+}
+
+void handle_DWC(volatile ModuleValues_t *vals)
+{
+	// check pin value
+	  uint8_t b_DWC_cut = !(PINF & 4); //read pin
+	  
+	  if (b_DWC_cut)
+	  {
+		  vals->u8_accel_cmd = 0.0 ;
+		  vals->u8_brake_cmd = 0.0 ;
+	  }
+}
 
 void handle_current_sensor(volatile float *f32_current, uint16_t u16_ADC_reg, uint8_t u8_sensor_num)
 {

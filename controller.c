@@ -13,8 +13,8 @@
 #include "pid.h"
 #include "controller.h"
 
-const float Kp=L*2300.0 ; //1500*L 2300*L
-const float Ki=R*100.0 ; //100*R
+const float Kp=L*2300.0*0.4 ; //1500*L 2300*L
+const float Ki=R*100.0*0.7 ; //100*R
 const float TimeStep = 0.005 ; //5ms (see timer 0 in main.c)
 
 static float f32_Integrator = 0.0 ;

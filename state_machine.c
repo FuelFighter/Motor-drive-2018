@@ -13,14 +13,14 @@
 
 #define MAX_VOLT 55.0
 #define MIN_VOLT 15.0
-#define MAX_AMP 15.0
+#define MAX_AMP 30.0
 #define MAX_TEMP 100
 
 static uint8_t b_major_fault = 0;
-static ControlType_t save_ctrl_type ;
 static uint8_t fault_count = 0;
 static uint16_t fault_timeout = 0;
 static uint8_t fault_clear_count = 0;
+static uint8_t starting_engage = 0;
 
 void state_handler(volatile ModuleValues_t * vals)
 {
@@ -66,23 +66,23 @@ void state_handler(volatile ModuleValues_t * vals)
 		
 			if (vals->pwtrain_type == BELT)
 			{
-				controller(vals);
-				//drivers(0); //disable
-				//reset_I();
-				//vals->u8_duty_cycle = 50 ;
+				//controller(vals);
+				drivers(0); //disable
+				reset_I();
+				vals->u8_duty_cycle = 50 ;
 				
 				//transition 7
 				if (vals->u8_brake_cmd > 0)
 				{
-					//vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
-					//set_I(vals->u8_duty_cycle) ; //set integrator
+					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = BRAKE;
 				}
 				//transition 5
 				if (vals->u8_accel_cmd > 0)
 				{
-					//vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
-					//set_I(vals->u8_duty_cycle) ; //set integrator
+					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = ACCEL;
 				}
 			}
@@ -93,6 +93,7 @@ void state_handler(volatile ModuleValues_t * vals)
 				if ((vals->u8_accel_cmd > 0 || vals->u8_brake_cmd > 0) && vals->gear_status == NEUTRAL)
 				{
 					vals->motor_status = ENGAGE;
+					starting_engage = 1;
 				}
 				drivers(0); //disable
 				vals->gear_required = NEUTRAL ;
@@ -103,20 +104,25 @@ void state_handler(volatile ModuleValues_t * vals)
 		break;
 		
 		case ENGAGE: // /!\ TODO : with the two gears, all turning motion has to be inverted for the inner gear.
+			
 			vals->gear_required = GEAR1;
-			vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
-			set_I(vals->u8_duty_cycle) ; //set integrator
-			save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
+			if (starting_engage)
+			{
+				vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
+				set_I(vals->u8_duty_cycle) ; //set integrator
+				starting_engage = 0;
+			}
+			//save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
 			vals->ctrl_type = PWM ;
 			controller(vals) ; //speed up motor to synch speed
 			drivers(1);
 			//transition 9, GEAR
-			if (vals->u8_brake_cmd > 0 && vals->gear_status == vals->gear_required && vals->gear_status != NEUTRAL)
+			if (vals->u8_brake_cmd > 0 && vals->gear_status == GEAR1)
 			{
 				vals->motor_status = BRAKE;
 			}
 			//transition 10, GEAR
-			if (vals->u8_accel_cmd > 0 && vals->gear_status == vals->gear_required && vals->gear_status != NEUTRAL)
+			if (vals->u8_accel_cmd > 0 && vals->gear_status == GEAR1)
 			{
 				vals->motor_status = ACCEL;
 			}
@@ -127,14 +133,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			}
 		break;
 		
-		case ACCEL:
-			//if deadman released before throttle
-			if (vals->u16_watchdog_can <= WATCHDOG_CAN_RELOAD_VALUE - 10)
-			{
-				vals->u8_accel_cmd = 0;
-			}
-			
-			//vals->ctrl_type = save_ctrl_type ;
+		case ACCEL:			
 			vals->ctrl_type = CURRENT;
 			controller(vals);
 			drivers(1);
@@ -147,6 +146,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
 			{
 				vals->motor_status = ENGAGE;
+				starting_engage = 1;
 			}
 			//transition 14
 			if (vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0)
@@ -156,12 +156,6 @@ void state_handler(volatile ModuleValues_t * vals)
 		break;
 		
 		case BRAKE:
-			//if deadman released before throttle
-			if (vals->u16_watchdog_can <= WATCHDOG_CAN_RELOAD_VALUE - 10)
-			{
-				vals->u8_brake_cmd = 0;
-			}
-			//vals->ctrl_type = save_ctrl_type ;
 			vals->ctrl_type = CURRENT ;
 			controller(vals); //negative throttle cmd
 			drivers(1);
@@ -174,6 +168,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
 			{
 				vals->motor_status = ENGAGE;
+				starting_engage = 1;
 			}
 			//transition 15
 			if (vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0)

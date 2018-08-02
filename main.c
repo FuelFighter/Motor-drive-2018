@@ -114,7 +114,7 @@ int main(void)
 	cli();
 	rgbled_init();
 	//rgbled_turn_on(LED_BLUE);
-
+	DWC_init();
 	pwm_init();
 	can_init(0,0);
 	timer1_init_ts();
@@ -158,6 +158,7 @@ int main(void)
 
 
 ISR(TIMER0_COMP_vect){ // every 5ms
+	handle_DWC(&ComValues); // sets accel and brake cmds to 0
 	state_handler(&ComValues);
 	if (systic_counter_fast == 7) // every 41ms
 	{

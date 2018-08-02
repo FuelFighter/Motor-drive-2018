@@ -81,23 +81,23 @@ void handle_can(volatile ModuleValues_t *vals, CanMessage_t *rx){
 				vals->message_mode = CAN ;
 				vals->ctrl_type = CURRENT ;
 				vals->u16_watchdog_can = WATCHDOG_CAN_RELOAD_VALUE ; // resetting to max value each time a message is received.
-				if (rx->data.u8[3] > 10)
+				if (rx->data.u8[3] > 8)
 				{
-					vals->u8_accel_cmd = rx->data.u8[3]/10 ; 
+					vals->u8_accel_cmd = rx->data.u8[3]/8 ; 
 					vals->u16_watchdog_throttle = WATCHDOG_THROTTLE_RELOAD_VALUE ;
 				}
 				
-				if (rx->data.u8[2] > 27)
+				if (rx->data.u8[2] > 8)
 				{
 					vals->u8_brake_cmd = rx->data.u8[2]/10 ;
 					vals->u16_watchdog_throttle = WATCHDOG_THROTTLE_RELOAD_VALUE ;
 				}
 				
-				if (rx->data.u8[2] <= 27)
+				if (rx->data.u8[2] <= 8)
 				{
 					vals->u8_brake_cmd = 0;
 				}
-				if (rx->data.u8[3] <= 10)
+				if (rx->data.u8[3] <= 8)
 				{
 					vals->u8_accel_cmd = 0;
 				}
@@ -247,9 +247,9 @@ void manage_LEDs(volatile ModuleValues_t vals)
 		break;
 		
 		case BRAKE :
-			rgbled_turn_off(LED_RED);
 			rgbled_turn_off(LED_BLUE);
 			rgbled_toggle(LED_GREEN);
+			rgbled_toggle(LED_RED);
 		break;
 		
 		case IDLE :
