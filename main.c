@@ -3,31 +3,29 @@
  *
  * Created: 10.01.2018
  * Author : Tanguy Simon for DNV GL Fuel fighter
- * Corresponding Hardware : Motor Drive V2.0
+ * Corresponding Hardware : Motor Drive V2.1
  */ 
-////////////////  TODO  ////////////
-/*
-* Gear2 ? /!\ reverse motion
-*
-*
-*
-*
-*/
+
 ////////////////  DESCRIPTION  ////////////
-/* The motorcontroller has CAN interface with the dashboard and the electrical clutch
+/* The motor controller has CAN interface with the dashboard and the electrical clutch
 * It has a UART interface with a computer (serialPlot, arduino IDE, Atmel studio serial interface and Simulink)
 * There are two modules in the car (1 & 2) with their corresponding clutch. (choose this in motor_controller_selectrion.h)
-* It can be controlled in PWM (only through UART) or Current
+* It can be controlled in PWM (only through UART) or Current target
 * It can control the belt powertrain (default) or the Gear powertrain (upon reception of clutch CAN message)
-* The main only has timer definition and systic handlers.
+* The main only has timer definition, systic handlers and the speed interrupt.
 * The SPI, UART, CAN communication and state LEDs are managed in DigiCom.c
 * controller.c manages the modulator and current loop
-* the sensors.c manages conversions from the current, voltage and temperature sensors.
+* sensors.c manages conversions from the current, voltage and temperature sensors.
 * state_machine.c manages the different states of the motorcontroller, the inter-state transitions and actions during each state.
-* speed.c is dedicated to the speed counter (reed switch with magnets on the wheel) and Synchronous speed duty cycle to engage the gears.
+* speed.c is dedicated to the speed counter (reed switch or hall sensor with magnets on the wheel) and Synchronous speed duty cycle to engage the gears.
 
-//////////////////////// WHEN PROGRAMMING A UM///////////////
+//////////////////////// WHEN PROGRAMMING A UM  ///////////////
+* double check which code you are using
+* disconnect the MC from the CAN bus
+* turn the power off
 * Look into motor_controller_selection.h and choose the correct defines.
+* power the UM with a USB cable
+* flash the UM with an ICE programmer
 */
 
 //CLKI/O = 8MHz
@@ -113,7 +111,6 @@ int main(void)
 {
 	cli();
 	rgbled_init();
-	//rgbled_turn_on(LED_BLUE);
 	DWC_init();
 	pwm_init();
 	can_init(0,0);
@@ -133,7 +130,10 @@ int main(void)
     while (1){
 		
 		handle_can(&ComValues, &rxFrame); //receive CAN
-		//receive_uart(&ComValues);
+		
+		#ifdef ENABLE_UART_TX
+			receive_uart(&ComValues);
+		#endif
 		
 		if (b_send_can)
 		{
@@ -158,8 +158,8 @@ int main(void)
 
 
 ISR(TIMER0_COMP_vect){ // every 5ms
-	handle_DWC(&ComValues); // sets accel and brake cmds to 0
-	state_handler(&ComValues);
+	handle_DWC(&ComValues); // sets accel and brake cmds to 0 when shell's telemetry system is triggered
+	state_handler(&ComValues); // manages the state machine
 	if (systic_counter_fast == 7) // every 41ms
 	{
 		b_send_can = 1;
@@ -177,7 +177,7 @@ ISR(TIMER0_COMP_vect){ // every 5ms
 			ComValues.u16_watchdog_throttle = 0;
 		}
 		
-		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 41) ;		
+		handle_joulemeter(&ComValues.f32_energy, ComValues.f32_batt_current, ComValues.f32_batt_volt, 41) ;	//unprecise, to be corrected	
 		systic_counter_fast = 0;
 	} else {
 		systic_counter_fast ++;
@@ -243,8 +243,9 @@ ISR(TIMER1_COMPA_vect){// every 1ms
 }
 
 
-ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of the reed switch)
+ISR(INT5_vect) //interrupt on rising front of the speed sensor (each time a magnet passes in front of sensor)
 {
-	//rgbled_toggle(LED_GREEN);
+	//rgbled_toggle(LED_GREEN); //uncomment to test speed sensor mounting. should blink periodically. 
+	//remember to comment the "manage_LED" function
 	handle_speed_sensor(&ComValues.u16_car_speed, &u16_speed_count);
 }

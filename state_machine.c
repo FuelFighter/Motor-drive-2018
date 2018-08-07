@@ -13,7 +13,7 @@
 
 #define MAX_VOLT 55.0
 #define MIN_VOLT 15.0
-#define MAX_AMP 30.0
+#define MAX_AMP 25.0
 #define MAX_TEMP 100
 
 static uint8_t b_major_fault = 0;
@@ -29,7 +29,8 @@ void state_handler(volatile ModuleValues_t * vals)
 	if (b_board_powered && (vals->f32_motor_current >= MAX_AMP|| vals->f32_motor_current <= -MAX_AMP || vals->f32_batt_volt > MAX_VOLT))
 	{
 		fault_count ++ ;
-		if (fault_count == 3)
+		if (fault_count == 3) // a fault is cleared after some time and a maximum of three times. If the fault occurs more than three times, 
+		//the board needs to be reset. there is a real problem to be investigated.
 		{
 			b_major_fault = 1;
 			fault_timeout = 600 ;
@@ -46,7 +47,7 @@ void state_handler(volatile ModuleValues_t * vals)
 	switch(vals->motor_status)
 	{
 		case OFF:
-			//transition 1
+			//transition 1 (see documentation for the state machine description)
 			if (vals->u16_watchdog_can > 0 && b_board_powered)
 			{
 				vals->motor_status = IDLE;

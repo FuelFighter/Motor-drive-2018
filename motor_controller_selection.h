@@ -34,6 +34,10 @@
 #define MOTOR_CONTROLLER_1
 // MOTOR_CONTROLLER_2
 
+//Enabling the UART communication 
+//Transmit is always on and is reliable. 
+//Reception through UART has lead to some unreliabilities and should be deactivated when unused
+#define ENABLE_UART_TX
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 //  for MC
