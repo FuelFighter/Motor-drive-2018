@@ -75,14 +75,14 @@ void state_handler(volatile ModuleValues_t * vals)
 				//transition 7
 				if (vals->u8_brake_cmd > 0)
 				{
-					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, BELTGEAR, vals->f32_batt_volt) ; //Setting duty
 					set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = BRAKE;
 				}
 				//transition 5
 				if (vals->u8_accel_cmd > 0)
 				{
-					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, GEAR2, vals->f32_batt_volt) ; //Setting duty
+					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, BELTGEAR, vals->f32_batt_volt) ; //Setting duty
 					set_I(vals->u8_duty_cycle) ; //set integrator
 					vals->motor_status = ACCEL;
 				}
