@@ -13,6 +13,9 @@
 #include "pid.h"
 #include "controller.h"
 
+#define MAX_DUTY_BOUND 95
+#define MIN_DUTY_BOUND 5
+
 const float Kp=L*2300.0*0.4 ; //1500*L 2300*L
 const float Ki=R*100.0*0.7 ; //100*R
 const float TimeStep = 0.005 ; //5ms (see timer 0 in main.c)
@@ -79,14 +82,14 @@ void controller(volatile ModuleValues_t *vals){
 	
 	
 	//bounding of duty cycle for well function of bootstrap capacitors
-	if (f32_DutyCycleCmd > 95)
+	if (f32_DutyCycleCmd > MAX_DUTY_BOUND)
 	{
-		f32_DutyCycleCmd = 95;
+		f32_DutyCycleCmd = MAX_DUTY_BOUND;
 	}
 	
-	if (f32_DutyCycleCmd < 50)// bounding at 50 to prevent rheostatic braking and backwards motion
+	if (f32_DutyCycleCmd < MIN_DUTY_BOUND)// bounding at 50 to prevent rheostatic braking and backwards motion
 	{
-		f32_DutyCycleCmd = 50;
+		f32_DutyCycleCmd = MIN_DUTY_BOUND;
 	}
 	
 	if (SW_MODE == BIPOLAR)
