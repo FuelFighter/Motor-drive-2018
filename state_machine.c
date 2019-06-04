@@ -242,7 +242,16 @@ void state_handler(volatile ModuleValues_t * vals)
 		break;	
 	}
 	
-	if ((vals->motor_status == IDLE || vals->motor_status == ACCEL || vals->motor_status == BRAKE || vals->motor_status == ENGAGE) && (vals->u16_watchdog_can == 0 || !b_board_powered))
+	if ((vals->motor_status == IDLE 
+		|| vals->motor_status == ACCEL_GEAR1
+		|| vals->motor_status == ACCEL_GEAR2
+		|| vals->motor_status == BRAKE_GEAR1
+		|| vals->motor_status == BRAKE_GEAR2
+		|| vals->motor_status == ENGAGE
+		)
+		&&
+		(vals->u16_watchdog_can == 0
+|| !b_board_powered))
 	{
 		// transition 2
 		vals->motor_status = OFF;
@@ -250,7 +259,7 @@ void state_handler(volatile ModuleValues_t * vals)
 	
 	if (b_major_fault || vals->u8_motor_temp >= MAX_TEMP) //over current, over voltage, over temp
 	{
-		//transition 3
+		//transition 3	
 		vals->motor_status = ERR;
 	}
 }
