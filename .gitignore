@@ -11,8 +11,8 @@
 *.sln.docstates
 
 # Build results
-[Dd]ebug/
-[Rr]elease/
+Debug/*
+Release/*
 *_i.c
 *_p.c
 *.ilk
