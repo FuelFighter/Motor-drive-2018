@@ -251,7 +251,8 @@ void state_handler(volatile ModuleValues_t * vals)
 		)
 		&&
 		(vals->u16_watchdog_can == 0
-|| !b_board_powered))
+		|| !b_board_powered)
+		)
 	{
 		// transition 2
 		vals->motor_status = OFF;
