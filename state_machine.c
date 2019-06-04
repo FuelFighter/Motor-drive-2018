@@ -10,13 +10,12 @@
 #include "state_machine.h"
 #include "controller.h"
 #include "speed.h"
-
 #define MAX_VOLT 55.0
 #define MIN_VOLT 15.0
 #define MAX_AMP 25.0
 #define MAX_TEMP 100
 #define LOW_GEAR_CHANGE_SPEED 4.0
-#define HIGH_GEAR_CHANGE_SPEED 5.5
+#define HIGH_GEAR_CHANGE_SPEED 5.50
 
 static uint8_t b_major_fault = 0;
 static uint8_t fault_count = 0;
@@ -268,7 +267,7 @@ void state_handler(volatile ModuleValues_t * vals)
 
 ClutchState_t calculate_required_gear(uint16_t u16_car_speed, uint8_t u8_accel_cmd, uint8_t u8_brake_cmd, PowertrainType_t pwtrain_type) {
 	ClutchState_t required_gear = NEUTRAL ;
-	if ((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed > LOW_GEAR_CHANGE_SPEED) ||
+	if ((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed < LOW_GEAR_CHANGE_SPEED) ||
 		(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed < HIGH_GEAR_CHANGE_SPEED) ||
 		pwtrain_type == BELT) {
 		required_gear = GEAR1 ;
