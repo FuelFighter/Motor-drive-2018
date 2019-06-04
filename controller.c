@@ -14,7 +14,7 @@
 #include "controller.h"
 
 #define MAX_DUTY_BOUND 95
-#define MIN_DUTY_BOUND 5
+#define MIN_DUTY_BOUND 50
 
 const float Kp=L*2300.0*0.4 ; //1500*L 2300*L
 const float Ki=R*100.0*0.7 ; //100*R
