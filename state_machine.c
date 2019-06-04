@@ -77,14 +77,14 @@ void state_handler(volatile ModuleValues_t * vals)
 				{
 					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, BELTGEAR, vals->f32_batt_volt) ; //Setting duty
 					set_I(vals->u8_duty_cycle) ; //set integrator
-					vals->motor_status = BRAKE;
+					vals->motor_status = BRAKE_GEAR1;
 				}
 				//transition 5
 				if (vals->u8_accel_cmd > 0)
 				{
 					vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, BELTGEAR, vals->f32_batt_volt) ; //Setting duty
 					set_I(vals->u8_duty_cycle) ; //set integrator
-					vals->motor_status = ACCEL;
+					vals->motor_status = ACCEL_GEAR1;
 				}
 			}
 			
@@ -106,7 +106,7 @@ void state_handler(volatile ModuleValues_t * vals)
 		
 		case ENGAGE: // /!\ TODO : with the two gears, all turning motion has to be inverted for the inner gear.
 			
-			vals->gear_required = GEAR1;
+			vals->gear_required = GEAR1; // needs logic
 			if (starting_engage)
 			{
 				vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
@@ -117,15 +117,15 @@ void state_handler(volatile ModuleValues_t * vals)
 			vals->ctrl_type = PWM ;
 			controller(vals) ; //speed up motor to synch speed
 			drivers(1);
-			//transition 9, GEAR
+			//transition ?	9, GEAR
 			if (vals->u8_brake_cmd > 0 && vals->gear_status == GEAR1)
 			{
-				vals->motor_status = BRAKE;
+				vals->motor_status = BRAKE_GEAR1;
 			}
-			//transition 10, GEAR
+			//transition ?10, GEAR
 			if (vals->u8_accel_cmd > 0 && vals->gear_status == GEAR1)
 			{
-				vals->motor_status = ACCEL;
+				vals->motor_status = ACCEL_GEAR1;
 			}
 			//transition 11, GEAR
 			if (vals->u8_accel_cmd == 0 && vals->u8_brake_cmd == 0 && vals->u16_watchdog_throttle == 0)
@@ -134,7 +134,9 @@ void state_handler(volatile ModuleValues_t * vals)
 			}
 		break;
 		
-		case ACCEL:			
+		case ACCEL_GEAR1:
+		
+			// TODO check gear one change_rules			
 			vals->ctrl_type = CURRENT;
 			controller(vals);
 			drivers(1);
@@ -149,14 +151,38 @@ void state_handler(volatile ModuleValues_t * vals)
 				vals->motor_status = ENGAGE;
 				starting_engage = 1;
 			}
-			//transition 14
+			//transition ?14
 			if (vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0)
 			{
-				vals->motor_status = BRAKE;
+				vals->motor_status = BRAKE_GEAR1;
 			}
 		break;
 		
-		case BRAKE:
+		case ACCEL_GEAR2:
+		
+		// TODO check gear to change rules
+		vals->ctrl_type = CURRENT;
+		controller(vals);
+		drivers(1);
+		//transition 6
+		if (vals->u8_accel_cmd == 0 && vals->u16_watchdog_throttle == 0)
+		{
+			vals->motor_status = IDLE;
+		}
+		//transition 12, GEAR
+		if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
+		{
+			vals->motor_status = ENGAGE;
+			starting_engage = 1;
+		}
+		//transition ?14
+		if (vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0) //needs more logic
+		{
+			vals->motor_status = BRAKE_GEAR2;
+		}
+		break;
+		
+		case BRAKE_GEAR1:
 			vals->ctrl_type = CURRENT ;
 			controller(vals); //negative throttle cmd
 			drivers(1);
@@ -171,10 +197,32 @@ void state_handler(volatile ModuleValues_t * vals)
 				vals->motor_status = ENGAGE;
 				starting_engage = 1;
 			}
-			//transition 15
+			//transition ?15
 			if (vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0)
 			{
-				vals->motor_status = ACCEL;
+				vals->motor_status = ACCEL_GEAR1;
+			}
+		break;
+		
+		case BRAKE_GEAR2:
+			vals->ctrl_type = CURRENT ;
+			controller(vals); //negative throttle cmd
+			drivers(1);
+			//transition 8
+			if (vals->u8_brake_cmd == 0 && vals->u16_watchdog_throttle == 0)
+			{
+				vals->motor_status = IDLE;
+			}
+			//transition 13, GEAR
+			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
+			{
+				vals->motor_status = ENGAGE;
+				starting_engage = 1;
+			}
+			//transition ?15
+			if (vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0)
+			{
+				vals->motor_status = ACCEL_GEAR2;
 			}
 		break;
 		

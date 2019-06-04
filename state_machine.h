@@ -15,11 +15,13 @@
 //////////////  TYPES  ///////////////
 typedef enum {
 	OFF = 0, // power or CAN disconnected
-	ACCEL = 1, //receiving ACCEL cmd
-	BRAKE = 2, //Receiving BRAKE cmd
-	IDLE = 3, //receiving 0 current cmd (car rolling, current loop is running with 0A cmd
-	ERR = 4, //error mode
-	ENGAGE = 5 //waiting for the clutch to engage
+	ACCEL_GEAR1 = 1, //Receiving ACCEL cmd and gear1
+	ACCEL_GEAR2 = 2, //Receiving ACCEL cmd and gear2
+	BRAKE_GEAR1 = 3, //Receiving BRAKE cmd and gear1
+	BRAKE_GEAR2 = 4, //Receiving BRAKE cmd and gear2
+	IDLE = 5, //receiving 0 current cmd (car rolling, current loop is running with 0A cmd
+	ERR = 6, //error mode
+	ENGAGE = 7 //waiting for the clutch to engage
 } MotorControllerState_t;
 
 typedef enum
