@@ -15,6 +15,8 @@
 #define MIN_VOLT 15.0
 #define MAX_AMP 25.0
 #define MAX_TEMP 100
+#define LOW_GEAR_CHANGE_SPEED 4.0
+#define HIGH_GEAR_CHANGE_SPEED 5.5
 
 static uint8_t b_major_fault = 0;
 static uint8_t fault_count = 0;
@@ -106,27 +108,39 @@ void state_handler(volatile ModuleValues_t * vals)
 		
 		case ENGAGE: // /!\ TODO : with the two gears, all turning motion has to be inverted for the inner gear.
 			
-			vals->gear_required = GEAR1; // needs logic
-			if (starting_engage)
+			vals->gear_required = calculate_required_gear(vals->u16_car_speed, vals->u8_accel_cmd, vals->u8_brake_cmd);
+			if (vals->gear_required != vals->gear_status)
 			{
 				vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
 				set_I(vals->u8_duty_cycle) ; //set integrator
-				starting_engage = 0;
+				vals->ctrl_type = PWM ;
 			}
 			//save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
-			vals->ctrl_type = PWM ;
+			
 			controller(vals) ; //speed up motor to synch speed
 			drivers(1);
-			//transition ?	9, GEAR
-			if (vals->u8_brake_cmd > 0 && vals->gear_status == GEAR1)
+			//transition ?	9, GEAR1
+			if (vals->u8_brake_cmd > 0 && vals->u16_car_speed < HIGH_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
 			{
 				vals->motor_status = BRAKE_GEAR1;
 			}
-			//transition ?10, GEAR
-			if (vals->u8_accel_cmd > 0 && vals->gear_status == GEAR1)
+			//transition ?	9, GEAR2
+			if (vals->u8_brake_cmd > 0 && vals->u16_car_speed > HIGH_GEAR_CHANGE_SPEED && vals->gear_status == GEAR2)
+			{
+				vals->motor_status = BRAKE_GEAR2;
+			}
+			
+			//transition ?10, GEAR1
+			if (vals->u8_accel_cmd > 0 && vals->u16_car_speed < LOW_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
 			{
 				vals->motor_status = ACCEL_GEAR1;
 			}
+			//transition ?10, GEAR2
+			if (vals->u8_accel_cmd > 0 && vals->u16_car_speed > LOW_GEAR_CHANGE_SPEED && vals->gear_status == GEAR2)
+			{
+				vals->motor_status = ACCEL_GEAR2;
+			}
+			
 			//transition 11, GEAR
 			if (vals->u8_accel_cmd == 0 && vals->u8_brake_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
@@ -152,10 +166,12 @@ void state_handler(volatile ModuleValues_t * vals)
 				starting_engage = 1;
 			}
 			//transition ?14
-			if (vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0)
+			if ((vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0) || //why zero?
+				(vals->u8_accel_cmd > 0 && vals->u16_car_speed > HIGH_GEAR_CHANGE_SPEED))
 			{
-				vals->motor_status = BRAKE_GEAR1;
+				vals->motor_status = ENGAGE;
 			}
+			
 		break;
 		
 		case ACCEL_GEAR2:
@@ -169,18 +185,12 @@ void state_handler(volatile ModuleValues_t * vals)
 		{
 			vals->motor_status = IDLE;
 		}
-		//transition 12, GEAR
-		if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
+		//transition 12 and ?14, GEAR
+		if ((vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL) ||
+			(vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0))
 		{
 			vals->motor_status = ENGAGE;
-			starting_engage = 1;
 		}
-		//transition ?14
-		if (vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0) //needs more logic
-		{
-			vals->motor_status = BRAKE_GEAR2;
-		}
-		break;
 		
 		case BRAKE_GEAR1:
 			vals->ctrl_type = CURRENT ;
@@ -191,16 +201,11 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = IDLE;
 			}
-			//transition 13, GEAR
-			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
+			//transition 13 and ?15, GEAR
+			if ((vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL) ||
+				(vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0))
 			{
 				vals->motor_status = ENGAGE;
-				starting_engage = 1;
-			}
-			//transition ?15
-			if (vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0)
-			{
-				vals->motor_status = ACCEL_GEAR1;
 			}
 		break;
 		
@@ -213,17 +218,14 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = IDLE;
 			}
-			//transition 13, GEAR
-			if (vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL)
+			//transition 13 and ?15, GEAR
+			if ((vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL) ||
+				(vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0) ||
+				(vals->u8_brake_cmd > 0 && vals->u16_car_speed < LOW_GEAR_CHANGE_SPEED))
 			{
 				vals->motor_status = ENGAGE;
-				starting_engage = 1;
 			}
-			//transition ?15
-			if (vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0)
-			{
-				vals->motor_status = ACCEL_GEAR2;
-			}
+			
 		break;
 		
 		case ERR:
@@ -242,16 +244,13 @@ void state_handler(volatile ModuleValues_t * vals)
 		break;	
 	}
 	
-	if ((vals->motor_status == IDLE 
-		|| vals->motor_status == ACCEL_GEAR1
-		|| vals->motor_status == ACCEL_GEAR2
-		|| vals->motor_status == BRAKE_GEAR1
-		|| vals->motor_status == BRAKE_GEAR2
-		|| vals->motor_status == ENGAGE
-		)
-		&&
-		(vals->u16_watchdog_can == 0
-		|| !b_board_powered)
+	if ((vals->motor_status == IDLE ||
+		vals->motor_status == ACCEL_GEAR1 ||
+		vals->motor_status == ACCEL_GEAR2 ||
+		vals->motor_status == BRAKE_GEAR1 ||
+		vals->motor_status == BRAKE_GEAR2 ||
+		vals->motor_status == ENGAGE) &&
+		(vals->u16_watchdog_can == 0 || !b_board_powered)
 		)
 	{
 		// transition 2
@@ -263,4 +262,20 @@ void state_handler(volatile ModuleValues_t * vals)
 		//transition 3	
 		vals->motor_status = ERR;
 	}
+}
+
+ClutchState_t calculate_required_gear(uint16_t u16_car_speed, uint8_t u8_accel_cmd, uint8_t u8_brake_cmd) {
+	ClutchState_t required_gear = NEUTRAL ;
+	if 	((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed >= LOW_GEAR_CHANGE_SPEED)
+		||
+		(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed >= HIGH_GEAR_CHANGE_SPEED)) {
+		required_gear = GEAR2 ;
+	}
+	else if ((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed > LOW_GEAR_CHANGE_SPEED)
+	||
+	(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed < HIGH_GEAR_CHANGE_SPEED)) {
+		required_gear = GEAR1 ;
+	}
+	
+	return required_gear ;
 }
