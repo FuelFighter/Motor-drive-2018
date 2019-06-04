@@ -34,7 +34,8 @@ void set_I(uint8_t duty)
 
 void controller(volatile ModuleValues_t *vals){
 	
-	static float f32_DutyCycleCmd = 50.0 ;
+	static float f32_DutyCycle = 50.0 ;
+	static float f32_DutyCycleCmd = 50.0;
 	float f32_CurrentDelta = 0.0 ;
 	static uint8_t b_saturation = 0;
 	float f32_throttle_cmd = 0;
@@ -50,7 +51,7 @@ void controller(volatile ModuleValues_t *vals){
 	
 	if (vals->ctrl_type == CURRENT)
 	{
-		if (f32_DutyCycleCmd >= 95 || f32_DutyCycleCmd <= 50)
+		if (f32_DutyCycle >= MAX_DUTY_BOUND || f32_DutyCycle <= MIN_DUTY_BOUND)
 		{
 			b_saturation = 1 ;
 		} else {
@@ -64,34 +65,39 @@ void controller(volatile ModuleValues_t *vals){
 			f32_Integrator+=f32_CurrentDelta*TimeStep ;
 		}
 		
-		f32_DutyCycleCmd=Kp*f32_CurrentDelta+f32_Integrator*Ki ;
-		f32_DutyCycleCmd=f32_DutyCycleCmd+50.0 ;
+		f32_DutyCycle=Kp*f32_CurrentDelta+f32_Integrator*Ki ;
+		f32_DutyCycle=f32_DutyCycle+50.0 ;
 	
 	}else if (vals->ctrl_type == PWM)
 	{
-		f32_DutyCycleCmd = (float)(vals->u8_duty_cycle);
+		f32_DutyCycle = (float)(vals->u8_duty_cycle);
 		if (vals->f32_motor_current > 0.5)
 		{
-			//f32_DutyCycleCmd -- ;
+			//f32_DutyCycle -- ;
 		}
 		if (vals->f32_motor_current < -0.5)
 		{
-			//f32_DutyCycleCmd ++ ;
+			//f32_DutyCycle ++ ;
 		}
 	}
 	
 	
 	//bounding of duty cycle for well function of bootstrap capacitors
-	if (f32_DutyCycleCmd > MAX_DUTY_BOUND)
+	if (f32_DutyCycle > MAX_DUTY_BOUND)
 	{
-		f32_DutyCycleCmd = MAX_DUTY_BOUND;
+		f32_DutyCycle = MAX_DUTY_BOUND;
 	}
 	
-	if (f32_DutyCycleCmd < MIN_DUTY_BOUND)// bounding at 50 to prevent rheostatic braking and backwards motion
+	if (f32_DutyCycle < MIN_DUTY_BOUND)// bounding at 50 to prevent rheostatic braking and backwards motion
 	{
-		f32_DutyCycleCmd = MIN_DUTY_BOUND;
+		f32_DutyCycle = MIN_DUTY_BOUND;
 	}
 	
+	if (vals->gear_status == GEAR2)
+	{
+		f32_DutyCycleCmd = (1-f32_DutyCycle)
+	}
+		
 	if (SW_MODE == BIPOLAR)
 	{
 		OCR3A = (int)((f32_DutyCycleCmd/100.0)*ICR3) ; //PWM_PE3 (non inverted)
@@ -101,7 +107,7 @@ void controller(volatile ModuleValues_t *vals){
 		OCR3B = (int)(ICR3-(f32_DutyCycleCmd/100.0)*ICR3) ; //PWM_PE4
 	}
 	
-	vals->u8_duty_cycle = (uint8_t)f32_DutyCycleCmd ; //exporting the duty cycle to be able to read in on the CAN and USB
+	vals->u8_duty_cycle = (uint8_t)f32_DutyCycle ; //exporting the duty cycle to be able to read in on the CAN and USB
 
 }
 
