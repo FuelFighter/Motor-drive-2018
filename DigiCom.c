@@ -240,16 +240,28 @@ void manage_LEDs(volatile ModuleValues_t vals)
 			rgbled_turn_on(LED_BLUE);
 		break ;
 		
-		case ACCEL :
+		case ACCEL_GEAR1 :
 			rgbled_turn_off(LED_RED);
 			rgbled_turn_off(LED_BLUE);
 			rgbled_toggle(LED_GREEN);
 		break;
 		
-		case BRAKE :
+		case ACCEL_GEAR2 :
+		rgbled_turn_off(LED_RED);
+		rgbled_turn_off(LED_BLUE);
+		rgbled_toggle(LED_GREEN);
+		break;
+		
+		case BRAKE_GEAR1 :
 			rgbled_turn_off(LED_BLUE);
 			rgbled_toggle(LED_GREEN);
 			rgbled_toggle(LED_RED);
+		break;
+		
+		case BRAKE_GEAR2 :
+		rgbled_turn_off(LED_BLUE);
+		rgbled_toggle(LED_GREEN);
+		rgbled_toggle(LED_RED);
 		break;
 		
 		case IDLE :
