@@ -167,8 +167,8 @@ void state_handler(volatile ModuleValues_t * vals)
 				vals->motor_status = IDLE;
 			}
 			//transition ?12
-			if (vals->gear_status == NEUTRAL) ||
-				(vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0) || //why zero?
+			if ((vals->gear_status == NEUTRAL) ||
+				(vals->u8_brake_cmd > 0) ||
 				(vals->u8_accel_cmd > 0 && vals->u16_car_speed > HIGH_GEAR_CHANGE_SPEED))
 			{
 				vals->motor_status = ENGAGE;
@@ -189,7 +189,7 @@ void state_handler(volatile ModuleValues_t * vals)
 		}
 		//transition 12 and ?14, GEAR
 		if ((vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL) ||
-			(vals->u8_brake_cmd > 0 && vals->u8_accel_cmd == 0))
+			(vals->u8_brake_cmd > 0))
 		{
 			vals->motor_status = ENGAGE;
 		}
