@@ -123,7 +123,7 @@ void handle_motor_status_can_msg(volatile ModuleValues_t vals){
 	txFrame.data.i8[1] = (int8_t)(vals.f32_motor_current*10);
 	txFrame.data.u16[1] = (uint16_t)(vals.f32_batt_volt*10);
 	txFrame.data.u16[2] = (uint16_t)abs((int16_t)vals.f32_energy/100.0) ;
-	txFrame.data.u8[6] = (uint8_t)(vals.u16_car_speed*3.6*0.5) ; //sent in km/h
+	txFrame.data.u8[6] = (uint8_t)(vals.u16_car_speed*3.6*0.5) ; //sent in km/h*5
 	txFrame.data.u8[7] = vals.u8_motor_temp;
 		
 	can_send_message(&txFrame);
