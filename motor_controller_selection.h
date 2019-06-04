@@ -14,7 +14,7 @@
 
 //////////////////////// DEFINES TO CHANGE BEFORE PROGRAMMING /////////////////
 //chose the correct PCB connected to the UM you program
-#define MC_BOARD_1
+#define MC_BOARD_3
 // MC_BOARD_2
 // MC_BOARD_3
 
@@ -22,7 +22,7 @@
 //and the number of magnets (they need to be precisely mounted at equal distances around the disk)
 #define SPEED_SENSOR_HALL
 // SPEED_SENSOR_REED
-#define NUM_MAGNETS 1
+#define NUM_MAGNETS 2
 
 //choose the motor you are using
 #define MOTOR_RE50_36V
