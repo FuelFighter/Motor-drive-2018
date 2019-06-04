@@ -34,15 +34,15 @@ void controller(volatile ModuleValues_t *vals){
 	static float f32_DutyCycleCmd = 50.0 ;
 	float f32_CurrentDelta = 0.0 ;
 	static uint8_t b_saturation = 0;
-	int8_t i8_throttle_cmd = 0;
+	float f32_throttle_cmd = 0;
 	
-	if (vals->motor_status == BRAKE)
+	if (vals->motor_status == BRAKE_GEAR1 || vals->motor_status == BRAKE_GEAR2)
 	{
-		i8_throttle_cmd = -(int8_t)vals->u8_brake_cmd ;
+		f32_throttle_cmd = -vals->u8_brake_cmd ;
 	}
-	if (vals->motor_status == ACCEL)
+	if (vals->motor_status == ACCEL_GEAR1 || vals->motor_status == ACCEL_GEAR2)
 	{
-		i8_throttle_cmd = vals->u8_accel_cmd ;
+		f32_throttle_cmd = vals->u8_accel_cmd ;
 	}
 	
 	if (vals->ctrl_type == CURRENT)
@@ -54,7 +54,7 @@ void controller(volatile ModuleValues_t *vals){
 			b_saturation = 0;
 		}
 		
-		f32_CurrentDelta = ((float)(i8_throttle_cmd)-vals->f32_motor_current)	;
+		f32_CurrentDelta = ((f32_throttle_cmd)-vals->f32_motor_current)	;
 		
 		if (!b_saturation) // prevents over integration of an error that cannot be dealt with (because the duty cycle reaches a limit) integral windup protection
 		{
