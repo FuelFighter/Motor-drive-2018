@@ -45,3 +45,9 @@ ipch/
 # Visual Studio profiler
 *.psess
 *.vsp
+*.o
+*.srec
+*.map
+*.lss
+*.hex
+*.map
