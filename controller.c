@@ -96,6 +96,8 @@ void controller(volatile ModuleValues_t *vals){
 	if (vals->gear_status == GEAR2)
 	{
 		f32_DutyCycleCmd = (100-f32_DutyCycle);
+	} else if (vals->gear_status == GEAR1) {
+		f32_DutyCycleCmd = f32_DutyCycle;
 	}
 		
 	if (SW_MODE == BIPOLAR)

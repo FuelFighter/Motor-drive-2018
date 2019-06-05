@@ -76,7 +76,7 @@ void SPI_handler_4(volatile uint8_t * u8_mottemp) //motor temperature
 void handle_can(volatile ModuleValues_t *vals, CanMessage_t *rx){
 	if (can_read_message_if_new(rx) && vals->motor_status != ERR){
 		switch (rx->id){
-			case DASHBOARD_CAN_ID	: //receiving can messages from the steering wheel
+			case DASHBOARD_CAN_ID: //receiving can messages from the steering wheel
 				
 				vals->message_mode = CAN ;
 				vals->ctrl_type = CURRENT ;
@@ -102,12 +102,13 @@ void handle_can(volatile ModuleValues_t *vals, CanMessage_t *rx){
 					vals->u8_accel_cmd = 0;
 				}
 				
-				vals->pwtrain_type = GEAR ;
-				vals->gear_status = rx->data.u8[7]
+				
 				
 			break;
 			
-			case E_CLUTCH_CAN_ID :
+			case 0x270 :
+				vals->pwtrain_type = GEAR ;
+				vals->gear_status = rx->data.u8[7];
 				/*
 				if (vals->pwtrain_type == BELT) {
 					vals->pwtrain_type = GEAR ;
