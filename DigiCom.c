@@ -194,7 +194,7 @@ void send_uart(volatile ModuleValues_t vals)
 	}
 	printf(",");
 	*/
-	printf("speed km/h : %u",(uint16_t)(vals.u16_car_speed*3.6));
+	printf("speed km/h : %u",(uint16_t)(vals.u16_car_speed*3.6/10));
 	printf(",");
 	printf(" gear req : %u",vals.gear_required);
 	printf(",");
