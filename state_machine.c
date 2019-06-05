@@ -222,7 +222,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			//transition 13 and ?15, GEAR
 			if ((vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL) ||
 				(vals->u8_brake_cmd == 0 && vals->u8_accel_cmd > 0) ||
-				(vals->u8_brake_cmd > 0 && vals->u16_car_speed < LOW_GEAR_CHANGE_SPEED))
+				(vals->u8_brake_cmd > 0 && vals->u16_car_speed < HIGH_GEAR_CHANGE_SPEED))
 			{
 				vals->motor_status = ENGAGE;
 			}
