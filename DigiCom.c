@@ -102,15 +102,20 @@ void handle_can(volatile ModuleValues_t *vals, CanMessage_t *rx){
 					vals->u8_accel_cmd = 0;
 				}
 				
+				vals->pwtrain_type = GEAR ;
+				vals->gear_status = rx->data.u8[7]
+				
 			break;
 			
 			case E_CLUTCH_CAN_ID :
+				/*
 				if (vals->pwtrain_type == BELT) {
 					vals->pwtrain_type = GEAR ;
 					vals->gear_required = NEUTRAL;
 				}
 				vals->u16_motor_speed = rx->data.u16[0] ; //receiving motor speed from encoder from clutch board
 				vals->gear_status = rx->data.u8[2] ; //receiving gear status from the clutch board
+				*/
 			break;
 		}
 	}
