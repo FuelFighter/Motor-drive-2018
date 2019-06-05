@@ -14,7 +14,7 @@
 
 //////////////////////// DEFINES TO CHANGE BEFORE PROGRAMMING /////////////////
 //chose the correct PCB connected to the UM you program
-#define MC_BOARD_1
+#define MC_BOARD_3
 // MC_BOARD_2
 // MC_BOARD_3
 
