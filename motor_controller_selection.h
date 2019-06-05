@@ -22,7 +22,7 @@
 //and the number of magnets (they need to be precisely mounted at equal distances around the disk)
 #define SPEED_SENSOR_HALL
 // SPEED_SENSOR_REED
-#define NUM_MAGNETS 1
+#define NUM_MAGNETS 2
 
 //choose the motor you are using
 #define MOTOR_RE50_36V
