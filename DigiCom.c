@@ -193,16 +193,18 @@ void send_uart(volatile ModuleValues_t vals)
 		printf(" cmd : %i",-(int8_t)vals.u8_brake_cmd);
 	}
 	printf(",");
+	*/
 	printf("speed km/h : %u",(uint16_t)(vals.u16_car_speed*3.6));
 	printf(",");
 	printf(" gear req : %u",vals.gear_required);
 	printf(",");
 	printf(" gear status : %u",vals.gear_status);
 	printf(",");
+	
 	printf(" ctrl mode (0:Cur, 1:PWM) : %u",vals.ctrl_type);
 	printf(",");
 	printf(" motor mode : %u",vals.motor_status);
-	*/
+	/*
 	
 	printf("%i",(int16_t)(vals.f32_motor_current*1000));
 	printf(",");
@@ -218,7 +220,7 @@ void send_uart(volatile ModuleValues_t vals)
 	printf("%u",(uint16_t)(vals.f32_batt_volt*10));
 	printf(",");
 	printf("%i",(int16_t)(vals.f32_batt_current*1000));
-	
+	*/
 }
 
 ///////////////// LED /////////////////////
@@ -239,7 +241,7 @@ void manage_LEDs(volatile ModuleValues_t vals)
 		
 		case ENGAGE :
 			rgbled_turn_off(LED_RED);
-			rgbled_turn_on(LED_GREEN);
+			rgbled_turn_off(LED_GREEN);
 			rgbled_turn_on(LED_BLUE);
 		break ;
 		
@@ -251,7 +253,7 @@ void manage_LEDs(volatile ModuleValues_t vals)
 		
 		case ACCEL_GEAR2 :
 		rgbled_turn_off(LED_RED);
-		rgbled_turn_off(LED_BLUE);
+		rgbled_turn_on(LED_BLUE);
 		rgbled_toggle(LED_GREEN);
 		break;
 		
@@ -262,7 +264,7 @@ void manage_LEDs(volatile ModuleValues_t vals)
 		break;
 		
 		case BRAKE_GEAR2 :
-		rgbled_turn_off(LED_BLUE);
+		rgbled_turn_on(LED_BLUE);
 		rgbled_toggle(LED_GREEN);
 		rgbled_toggle(LED_RED);
 		break;
