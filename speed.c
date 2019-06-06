@@ -17,8 +17,8 @@
 #define PI 3.14
 #define DISTANCE D_WHEEL*PI/NUM_MAGNETS
 #define LOWPASS_CONSTANT_S 0.1
-#define GEAR_RATIO_1 18.75 //375/24 = 15.6, 375/18 = 20.8
-#define GEAR_RATIO_2 18.75 //200/16 = 12.5  (BELT mode)
+#define GEAR_RATIO_1 37.5  //single gear = 18.75
+#define GEAR_RATIO_2 23 //  
 #define DUTY_CALC1 (1.08*6.0*GEAR_RATIO_1/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 #define DUTY_CALC2 (0.9*6.0*GEAR_RATIO_2/(PI*D_WHEEL*VOLT_SPEED_CST*2))
 
@@ -74,7 +74,7 @@ uint8_t compute_synch_duty(volatile uint8_t speed_10ms, ClutchState_t gear, floa
 	}
 	if (gear == BELTGEAR)//for belt powertrain
 	{
-		Duty = (speed_10ms*DUTY_CALC2/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5	
+		Duty = (speed_10ms*DUTY_CALC1/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5	
 	}
 	return Duty ;
 }
