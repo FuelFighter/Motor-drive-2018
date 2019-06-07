@@ -72,6 +72,15 @@ uint8_t compute_synch_duty(volatile uint8_t speed_10ms, ClutchState_t gear, floa
 			Duty = 52 ;
 		}		
 	}
+	
+	if (gear == GEAR2) {
+		Duty = (speed_10ms*DUTY_CALC2/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5
+		if (Duty == 50)
+		{
+			Duty = 52 ;
+		}
+	}
+	
 	if (gear == BELTGEAR)//for belt powertrain
 	{
 		Duty = (speed_10ms*DUTY_CALC1/vbatt)*100 + 50 ;// Vm/2Vbatt +0.5	
