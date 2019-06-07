@@ -3,7 +3,6 @@
  *
  * Created: 18.03.2017 13:30:14
  *  Author: Tanguy Simon for DNV GL Fuel fighter
- */ 
  */
 
 #include <avr/io.h>
