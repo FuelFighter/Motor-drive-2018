@@ -57,6 +57,10 @@ void controller(volatile ModuleValues_t *vals){
 		} else {
 			b_saturation = 0;
 		}
+		if (vals->gear_required != vals->closest_gear && vals->near_gear == 0) {
+			f32_throttle_cmd = -25;
+		}
+		
 		
 		f32_CurrentDelta = ((f32_throttle_cmd)-vals->f32_motor_current)	;
 		
@@ -70,6 +74,9 @@ void controller(volatile ModuleValues_t *vals){
 	
 	}else if (vals->ctrl_type == PWM)
 	{
+		if (vals->near_gear != NEUTRAL) {
+			drivers(0);
+		}
 		f32_DutyCycle = (float)(vals->u8_duty_cycle);
 		if (vals->f32_motor_current > 0.5)
 		{
@@ -93,9 +100,13 @@ void controller(volatile ModuleValues_t *vals){
 		f32_DutyCycle = MIN_DUTY_BOUND;
 	}
 	
-	if (vals->gear_status == GEAR2)
+	if (vals->closest_gear == GEAR2 || ((vals->gear_required == GEAR2) && vals->closest_gear == NEUTRAL) )
 	{
 		f32_DutyCycleCmd = (100-f32_DutyCycle);
+	} else if (vals->closest_gear == GEAR1 || ((vals->gear_required == GEAR1) && vals->closest_gear == NEUTRAL)) {
+		f32_DutyCycleCmd = f32_DutyCycle;
+	} else {
+		f32_DutyCycleCmd = f32_DutyCycle;
 	}
 		
 	if (SW_MODE == BIPOLAR)

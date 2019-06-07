@@ -104,7 +104,9 @@ volatile ModuleValues_t ComValues = {
 	.gear_required = GEAR1,
 	.b_driver_status = 0,
 	.ctrl_type = CURRENT,
-	.pwtrain_type = BELT
+	.pwtrain_type = BELT,
+	.closest_gear = 1,
+	.near_gear = 1
 };
 
 int main(void)	
