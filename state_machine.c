@@ -27,11 +27,11 @@ static uint8_t started_engage = 0;
 void state_handler(volatile ModuleValues_t * vals)
 {
 	uint8_t b_board_powered = (vals->f32_batt_volt >= MIN_VOLT  && vals->f32_batt_volt < 100.0);
-	
+
 	if (b_board_powered && (vals->f32_motor_current >= MAX_AMP|| vals->f32_motor_current <= -MAX_AMP || vals->f32_batt_volt > MAX_VOLT))
 	{
 		fault_count ++ ;
-		if (fault_count == 3) // a fault is cleared after some time and a maximum of three times. If the fault occurs more than three times, 
+		if (fault_count == 3) // a fault is cleared after some time and a maximum of three times. If the fault occurs more than three times,
 		//the board needs to be reset. there is a real problem to be investigated.
 		{
 			b_major_fault = 1;
@@ -62,18 +62,18 @@ void state_handler(volatile ModuleValues_t * vals)
 			vals->u8_accel_cmd = 0;
 			vals->u8_duty_cycle = 50;
 			vals->gear_required = NEUTRAL ;
-		
+
 		break;
-		
-		case IDLE: 
-		
+
+		case IDLE:
+
 			if (vals->pwtrain_type == BELT)
 			{
 				//controller(vals);
 				drivers(0); //disable
 				reset_I();
 				vals->u8_duty_cycle = 50 ;
-				
+
 				//transition 7
 				if (vals->u8_brake_cmd > 0)
 				{
@@ -89,7 +89,7 @@ void state_handler(volatile ModuleValues_t * vals)
 					vals->motor_status = ACCEL_GEAR1;
 				}
 			}
-			
+
 			if (vals->pwtrain_type == GEAR)
 			{
 				//transition 5
@@ -102,11 +102,11 @@ void state_handler(volatile ModuleValues_t * vals)
 				reset_I();
 				vals->u8_duty_cycle = 50 ;
 			}
-			
+
 		break;
-		
+
 		case ENGAGE: // /!\ TODO : with the two gears, all turning motion has to be inverted for the inner gear.
-			
+
 			vals->gear_required = calculate_required_gear(vals->u16_car_speed, vals->u8_accel_cmd, vals->u8_brake_cmd, vals->pwtrain_type);
 			if ((vals->gear_required != vals->gear_status ) && !started_engage) {
 				starting_engage = 1;
@@ -122,7 +122,7 @@ void state_handler(volatile ModuleValues_t * vals)
 				starting_engage = 0;
 			}
 			//save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
-			
+
 			controller(vals) ; //speed up motor to synch speed
 			drivers(1);
 			//transition ?	9, GEAR1
@@ -135,7 +135,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = BRAKE_GEAR2;
 			}
-			
+
 			//transition ?10, GEAR1
 			if (vals->u8_accel_cmd > 0 && vals->u16_car_speed < LOW_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
 			{
@@ -146,17 +146,17 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = ACCEL_GEAR2;
 			}
-			
+
 			//transition 11, GEAR
 			if (vals->u8_accel_cmd == 0 && vals->u8_brake_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
 				vals->motor_status = IDLE;
 			}
 		break;
-		
+
 		case ACCEL_GEAR1:
-		
-			// TODO check gear one change_rules			
+
+			// TODO check gear one change_rules
 			vals->ctrl_type = CURRENT;
 			controller(vals);
 			drivers(1);
@@ -172,11 +172,11 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = ENGAGE;
 			}
-			
+
 		break;
-		
+
 		case ACCEL_GEAR2:
-		
+
 		// TODO check gear to change rules
 		vals->ctrl_type = CURRENT;
 		controller(vals);
@@ -192,7 +192,7 @@ void state_handler(volatile ModuleValues_t * vals)
 		{
 			vals->motor_status = ENGAGE;
 		}
-		
+
 		case BRAKE_GEAR1:
 			vals->ctrl_type = CURRENT ;
 			controller(vals); //negative throttle cmd
@@ -209,7 +209,7 @@ void state_handler(volatile ModuleValues_t * vals)
 				vals->motor_status = ENGAGE;
 			}
 		break;
-		
+
 		case BRAKE_GEAR2:
 			vals->ctrl_type = CURRENT ;
 			controller(vals); //negative throttle cmd
@@ -226,9 +226,9 @@ void state_handler(volatile ModuleValues_t * vals)
 			{
 				vals->motor_status = ENGAGE;
 			}
-			
+
 		break;
-		
+
 		case ERR:
 			//transition 4
 			if (!b_major_fault && vals->u8_motor_temp < MAX_TEMP)
@@ -242,9 +242,9 @@ void state_handler(volatile ModuleValues_t * vals)
 			vals->u8_brake_cmd = 0;
 			vals->u8_accel_cmd = 0;
 			vals->u8_duty_cycle = 50;
-		break;	
+		break;
 	}
-	
+
 	if ((vals->motor_status == IDLE ||
 		vals->motor_status == ACCEL_GEAR1 ||
 		vals->motor_status == ACCEL_GEAR2 ||
@@ -257,10 +257,10 @@ void state_handler(volatile ModuleValues_t * vals)
 		// transition 2
 		vals->motor_status = OFF;
 	}
-	
+
 	if (b_major_fault || vals->u8_motor_temp >= MAX_TEMP) //over current, over voltage, over temp
 	{
-		//transition 3	
+		//transition 3
 		vals->motor_status = ERR;
 	}
 }
@@ -268,15 +268,18 @@ void state_handler(volatile ModuleValues_t * vals)
 ClutchState_t calculate_required_gear(uint16_t u16_car_speed, uint8_t u8_accel_cmd, uint8_t u8_brake_cmd, PowertrainType_t pwtrain_type) {
 	ClutchState_t required_gear = NEUTRAL ;
 	if ((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed < LOW_GEAR_CHANGE_SPEED) ||
-		(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed < HIGH_GEAR_CHANGE_SPEED) ||
-		pwtrain_type == BELT) {
+	(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed < HIGH_GEAR_CHANGE_SPEED) ||
+	(u8_brake_cmd > 0 && u8_accel_cmd > 0 && u16_car_speed < HIGH_GEAR_CHANGE_SPEED) ||
+	pwtrain_type == BELT)
+	{
 		required_gear = GEAR1 ;
 	}
-	else if	((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed >= LOW_GEAR_CHANGE_SPEED)
-		||
-		(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed >= HIGH_GEAR_CHANGE_SPEED)) {
+	else if	((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed >= LOW_GEAR_CHANGE_SPEED) ||
+	(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed >= HIGH_GEAR_CHANGE_SPEED) ||
+	(u8_brake_cmd > 0 && u8_accel_cmd > 0 && u16_car_speed >= HIGH_GEAR_CHANGE_SPEED))
+	{
 		required_gear = GEAR2 ;
 	}
-	
+
 	return required_gear ;
 }
