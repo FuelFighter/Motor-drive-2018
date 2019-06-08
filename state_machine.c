@@ -115,6 +115,7 @@ void state_handler(volatile ModuleValues_t * vals)
 				started_engage = 0;
 			}
 			if (starting_engage && vals->closest_gear == vals->gear_required)
+			{
 				vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
 				set_I(vals->u8_duty_cycle) ; //set integrator
 				vals->ctrl_type = PWM ;
