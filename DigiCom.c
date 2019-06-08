@@ -111,6 +111,8 @@ void handle_can(volatile ModuleValues_t *vals, CanMessage_t *rx){
 				}
 				vals->u16_motor_speed = rx->data.u16[0] ; //receiving motor speed from encoder from clutch board
 				vals->gear_status = rx->data.u8[2] ; //receiving gear status from the clutch board
+				vals->closest_gear = rx->data.u8[3];
+				vals->near_gear = rx->data.u8[4];
 			break;
 		}
 	}

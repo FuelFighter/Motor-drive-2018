@@ -70,6 +70,8 @@ typedef struct{
 	uint8_t b_driver_status;
 	ControlType_t ctrl_type;
 	PowertrainType_t pwtrain_type;
+	ClutchState_t closest_gear;
+	ClutchState_t near_gear;
 
 }ModuleValues_t;
 
