@@ -119,12 +119,13 @@ void state_handler(volatile ModuleValues_t * vals)
 				vals->u8_duty_cycle = compute_synch_duty(vals->u16_car_speed, vals->gear_required, vals->f32_batt_volt) ; //Setting duty
 				set_I(vals->u8_duty_cycle) ; //set integrator
 				vals->ctrl_type = PWM ;
+				drivers(1);
 				starting_engage = 0;
 			}
 			//save_ctrl_type = vals->ctrl_type ; // PWM type ctrl is needed only for the engagement process. The mode will be reverted to previous in ACCEL and BRAKE modes
 			
 			controller(vals) ; //speed up motor to synch speed
-			drivers(1);
+			
 			//transition ?	9, GEAR1
 			if (vals->u8_brake_cmd > 0 && vals->u16_car_speed < HIGH_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
 			{
