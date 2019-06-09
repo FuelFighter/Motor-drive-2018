@@ -14,8 +14,8 @@
 #define MIN_VOLT 15.0
 #define MAX_AMP 25.0
 #define MAX_TEMP 100
-#define LOW_GEAR_CHANGE_SPEED 20//40.0
-#define HIGH_GEAR_CHANGE_SPEED 20//55.0
+#define LOW_GEAR_CHANGE_SPEED 19//20=40.0
+#define HIGH_GEAR_CHANGE_SPEED 22//20=55.0
 
 static uint8_t b_major_fault = 0;
 static uint8_t fault_count = 0;
