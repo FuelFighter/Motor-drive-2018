@@ -127,7 +127,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			controller(vals) ; //speed up motor to synch speed
 			
 			//transition ?	9, GEAR1
-			if (vals->u8_brake_cmd > 0 && vals->u16_car_speed < HIGH_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
+			if (vals->u8_brake_cmd > 0 && vals->u16_car_speed <= HIGH_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
 			{
 				vals->motor_status = BRAKE_GEAR1;
 			}
@@ -138,12 +138,12 @@ void state_handler(volatile ModuleValues_t * vals)
 			}
 			
 			//transition ?10, GEAR1
-			if (vals->u8_accel_cmd > 0 && vals->u16_car_speed < LOW_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
+			if (vals->u8_accel_cmd > 0 && vals->u8_brake_cmd == 0 && vals->u16_car_speed < LOW_GEAR_CHANGE_SPEED && vals->gear_status == GEAR1)
 			{
 				vals->motor_status = ACCEL_GEAR1;
 			}
 			//transition ?10, GEAR2
-			if (vals->u8_accel_cmd > 0 && vals->u16_car_speed > LOW_GEAR_CHANGE_SPEED && vals->gear_status == GEAR2)
+			if (vals->u8_accel_cmd > 0 && vals->u8_brake_cmd == 0 && vals->u16_car_speed >= LOW_GEAR_CHANGE_SPEED && vals->gear_status == GEAR2)
 			{
 				vals->motor_status = ACCEL_GEAR2;
 			}
@@ -269,13 +269,12 @@ void state_handler(volatile ModuleValues_t * vals)
 ClutchState_t calculate_required_gear(uint16_t u16_car_speed, uint8_t u8_accel_cmd, uint8_t u8_brake_cmd, PowertrainType_t pwtrain_type) {
 	ClutchState_t required_gear = NEUTRAL ;
 	if ((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed < LOW_GEAR_CHANGE_SPEED) ||
-		(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed < HIGH_GEAR_CHANGE_SPEED) ||
+		(u8_brake_cmd > 0 && u16_car_speed <= HIGH_GEAR_CHANGE_SPEED) ||
 		pwtrain_type == BELT) {
 		required_gear = GEAR1 ;
 	}
-	else if	((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed >= LOW_GEAR_CHANGE_SPEED)
-		||
-		(u8_brake_cmd > 0 && u8_accel_cmd == 0 && u16_car_speed >= HIGH_GEAR_CHANGE_SPEED)) {
+	else if	((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed >= LOW_GEAR_CHANGE_SPEED) ||
+		(u8_brake_cmd > 0 && u16_car_speed > HIGH_GEAR_CHANGE_SPEED)) {
 		required_gear = GEAR2 ;
 	}
 	
