@@ -77,6 +77,6 @@ typedef struct{
 
 ////////////////  PROTOTYPES   /////////////////
 void state_handler(volatile ModuleValues_t * vals);
-ClutchState_t calculate_required_gear(uint16_t u16_car_speed, uint8_t u8_accel_cmd, uint8_t u8_brake_cmd, PowertrainType_t pwtrain_type);
+ClutchState_t calculate_required_gear(uint16_t u16_car_speed, uint8_t u8_accel_cmd, uint8_t u8_brake_cmd, PowertrainType_t pwtrain_type, uint8_t b_max_speed_achieved);
 
 #endif /* STATE_MACHINE_H_ */
