@@ -163,6 +163,12 @@ void state_handler(volatile ModuleValues_t * vals)
 			vals->ctrl_type = CURRENT;
 			controller(vals);
 			drivers(1);
+			
+			if (0) //needs logic to figure out achieved max speed
+			{
+				b_max_speed_achieved = 1;
+			}
+			
 			//transition 6
 			if (vals->u8_accel_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
@@ -172,7 +178,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			//transition ?12
 			if ((vals->gear_status == NEUTRAL) ||
 				(vals->u8_brake_cmd > 0) ||
-				(vals->u8_accel_cmd > 0 && vals->u16_car_speed > HIGH_GEAR_CHANGE_SPEED))
+				(vals->u8_accel_cmd > 0 && (vals->u16_car_speed > HIGH_GEAR_CHANGE_SPEED || b_max_speed_achieved)))
 			{
 				vals->motor_status = ENGAGE;
 			}
