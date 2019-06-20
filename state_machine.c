@@ -16,6 +16,7 @@
 #define MAX_TEMP 100
 #define LOW_GEAR_CHANGE_SPEED 20//40.0
 #define HIGH_GEAR_CHANGE_SPEED 20//55.0
+#define LOW_CURRENT_THRESHOLD 1
 
 static uint8_t b_major_fault = 0;
 static uint8_t fault_count = 0;
@@ -164,7 +165,8 @@ void state_handler(volatile ModuleValues_t * vals)
 			controller(vals);
 			drivers(1);
 			
-			if (0) //needs logic to figure out achieved max speed
+			if (vals->u8_duty_cycle == 95 &&
+				((vals->f32_motor_current*vals->f32_motor_current) <  (LOW_CURRENT_THRESHOLD*LOW_CURRENT_THRESHOLD)))
 			{
 				b_max_speed_achieved = 1;
 			}
