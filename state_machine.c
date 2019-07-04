@@ -101,6 +101,7 @@ void state_handler(volatile ModuleValues_t * vals)
 				}
 				drivers(0); //disable
 				vals->gear_required = NEUTRAL ;
+				
 				reset_I();
 				vals->u8_duty_cycle = 50 ;
 			}
@@ -250,6 +251,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			if (!b_major_fault && vals->u8_motor_temp < MAX_TEMP)
 			{
 				vals->motor_status = IDLE;
+				b_max_speed_achieved = 0;
 			}
 			drivers(0);//drivers shutdown
 			vals->b_driver_status = 0;
