@@ -258,7 +258,6 @@ void state_handler(volatile ModuleValues_t * vals)
 			vals->u8_brake_cmd = 0;
 			vals->u8_accel_cmd = 0;
 			vals->u8_duty_cycle = 50;
-			b_max_speed_achieved = 0;
 		break;	
 	}
 	
