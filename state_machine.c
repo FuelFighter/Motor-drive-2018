@@ -234,7 +234,6 @@ void state_handler(volatile ModuleValues_t * vals)
 			if (vals->u8_brake_cmd == 0 && vals->u16_watchdog_throttle == 0)
 			{
 				vals->motor_status = IDLE;
-				b_max_speed_achieved = 0;
 			}
 			//transition 13 and ?15, GEAR
 			if ((vals->pwtrain_type == GEAR && vals->gear_status == NEUTRAL) ||
