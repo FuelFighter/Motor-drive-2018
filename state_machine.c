@@ -181,7 +181,7 @@ void state_handler(volatile ModuleValues_t * vals)
 			//transition ?12
 			if ((vals->gear_status == NEUTRAL) ||
 				(vals->u8_brake_cmd > 0) ||
-				(vals->u8_accel_cmd > 0 && (vals->u16_car_speed > HIGH_GEAR_CHANGE_SPEED || b_max_speed_achieved)))
+				(vals->u8_accel_cmd > 0 && b_max_speed_achieved))
 			{
 				vals->motor_status = ENGAGE;
 			}
@@ -285,13 +285,20 @@ void state_handler(volatile ModuleValues_t * vals)
 
 ClutchState_t calculate_required_gear(uint16_t u16_car_speed, uint8_t u8_accel_cmd, uint8_t u8_brake_cmd, PowertrainType_t pwtrain_type, uint8_t b_max_speed_achieved) {
 	ClutchState_t required_gear = NEUTRAL ;
+	
 	if ((u8_accel_cmd > 0 && u8_brake_cmd == 0 && u16_car_speed < LOW_GEAR_CHANGE_SPEED && !b_max_speed_achieved) ||
 		(u8_brake_cmd > 0 && u16_car_speed <= HIGH_GEAR_CHANGE_SPEED) ||
 		pwtrain_type == BELT) {
+
 		required_gear = GEAR1 ;
 	}
-	else if	((u8_accel_cmd > 0 && u8_brake_cmd == 0 && (u16_car_speed >= LOW_GEAR_CHANGE_SPEED || b_max_speed_achieved)) ||
-		(u8_brake_cmd > 0 && u16_car_speed > HIGH_GEAR_CHANGE_SPEED)) {
+	else if	(
+	(u8_accel_cmd > 0 && u8_brake_cmd == 0 && (
+		u16_car_speed >= LOW_GEAR_CHANGE_SPEED || b_max_speed_achieved
+		)
+	) ||
+	(u8_brake_cmd > 0 && u16_car_speed > HIGH_GEAR_CHANGE_SPEED)
+	) {
 		required_gear = GEAR2 ;
 	}
 	
