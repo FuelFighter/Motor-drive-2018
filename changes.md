@@ -37,4 +37,4 @@ For speed calculations. Here we added the new gear ratios and added logic to com
 - `80` added function to calculate the required gear. This is a pure function.
 
 ### state_machine.c
-This is the one with major changes. So I'll do that later :P
+This is the one with major changes. [state machine picture](statemachine.png). Red lines are when braking occurs, green are acceleration. Black are watchdog timers. The red and green lines sometime have additional conditions to them. Max means max speed is achieved in that gear(by looking at dutycycle and motor_current, line `169-174`. The `LOW_CURRENT_THRESHOLD` may need to be tuned.) and it will change to gear 2. Otherwise the conditions are velocity values which are also needed to be tuned.
